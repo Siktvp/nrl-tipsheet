@@ -1,0 +1,41 @@
+name: Generate NRL Tip Sheet
+
+on:
+  # Runs every Thursday at 10pm UTC = Friday 8am AEST (before the weekend round)
+  schedule:
+    - cron: "0 22 * * 4"
+
+  # Also lets you trigger it manually from GitHub → Actions tab (works from your phone)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate tip sheet
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python nrl_tipsheet.py
+
+      - name: Commit and push updated tip sheet
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tipsheet_output.html
+          git diff --staged --quiet || git commit -m "chore: regenerate NRL tip sheet $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push

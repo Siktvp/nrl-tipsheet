@@ -1,0 +1,1084 @@
+"""
+NRL Betting Tip Sheet Generator
+Fetches live odds + player/team stats, calculates edge, generates HTML tip sheet.
+Run: python nrl_tipsheet.py
+Output: tipsheet_output.html (open in browser or access via GitHub Pages on phone)
+"""
+
+import os
+import sys
+import math
+import json
+import requests
+from datetime import datetime, timezone
+from jinja2 import Template
+from bs4 import BeautifulSoup
+
+# ---------------------------------------------------------------------------
+# Config — use environment variables (GitHub Actions) or fall back to config.py
+# ---------------------------------------------------------------------------
+try:
+    ODDS_API_KEY = os.environ.get("ODDS_API_KEY") or __import__("config").ODDS_API_KEY
+except Exception:
+    sys.exit("ERROR: ODDS_API_KEY not found. Add it to config.py or set the ODDS_API_KEY env var.")
+
+ODDS_BASE = "https://api.the-odds-api.com/v4"
+
+# NRL.com internal APIs (power the official NRL website — no key needed)
+NRL_COMPETITION_ID = "111"  # NRL Telstra Premiership
+
+OUTPUT_FILE = "tipsheet_output.html"
+
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+
+# Positional try-scoring factors for First Try Scorer model
+# Higher = more likely to score first. Based on typical NRL positional scoring patterns.
+POSITION_FTS_FACTOR = {
+    "Fullback": 0.32,
+    "Wing": 0.28,
+    "Centre": 0.22,
+    "Five-Eighth": 0.16,
+    "Halfback": 0.14,
+    "Lock": 0.12,
+    "Hooker": 0.12,
+    "Second Row": 0.10,
+    "Prop": 0.08,
+    "default": 0.14,
+}
+
+# ---------------------------------------------------------------------------
+# API helpers
+# ---------------------------------------------------------------------------
+
+def odds_get(path, params=None):
+    params = params or {}
+    params["apiKey"] = ODDS_API_KEY
+    r = requests.get(f"{ODDS_BASE}{path}", params=params, timeout=15)
+    r.raise_for_status()
+    return r.json()
+
+
+def nrl_get(url, params=None):
+    """Fetch from NRL.com APIs."""
+    r = requests.get(url, params=params or {}, headers=HEADERS, timeout=15)
+    r.raise_for_status()
+    return r.json()
+
+
+# ---------------------------------------------------------------------------
+# Step 1: Fetch upcoming NRL fixtures + odds from The Odds API
+# ---------------------------------------------------------------------------
+
+def fetch_fixtures_with_odds():
+    """Returns list of upcoming NRL games with h2h and spread odds."""
+    try:
+        data = odds_get(
+            "/sports/rugbyleague_nrl/odds",
+            {"regions": "au", "markets": "h2h,spreads", "oddsFormat": "decimal", "dateFormat": "iso"},
+        )
+    except Exception as e:
+        print(f"WARNING: Could not fetch odds from The Odds API: {e}")
+        return []
+
+    games = []
+    for event in data:
+        game = {
+            "id": event.get("id"),
+            "home_team": event.get("home_team"),
+            "away_team": event.get("away_team"),
+            "kickoff": event.get("commence_time"),
+            "h2h": {},
+            "spreads": {},
+        }
+
+        for bookie in event.get("bookmakers", []):
+            for market in bookie.get("markets", []):
+                if market["key"] == "h2h":
+                    for outcome in market["outcomes"]:
+                        game["h2h"].setdefault(outcome["name"], []).append(outcome["price"])
+                elif market["key"] == "spreads":
+                    for outcome in market["outcomes"]:
+                        game["spreads"].setdefault(outcome["name"], {
+                            "point": outcome.get("point", 0),
+                            "prices": [],
+                        })["prices"].append(outcome["price"])
+
+        # Average odds across bookmakers
+        for team, prices in game["h2h"].items():
+            game["h2h"][team] = round(sum(prices) / len(prices), 2)
+        for team, info in game["spreads"].items():
+            info["price"] = round(sum(info["prices"]) / len(info["prices"]), 2)
+            del info["prices"]
+
+        games.append(game)
+
+    return games
+
+
+# ---------------------------------------------------------------------------
+# Step 2: Fetch NRL team stats from nrl.com ladder
+# ---------------------------------------------------------------------------
+
+def fetch_team_stats():
+    """Returns dict of team_nickname -> stats using the nrl.com ladder API."""
+    season = datetime.now().year
+    try:
+        data = nrl_get(
+            "https://www.nrl.com/ladder/data",
+            {"competition": NRL_COMPETITION_ID, "season": season},
+        )
+        positions = data.get("positions", [])
+    except Exception as e:
+        print(f"WARNING: Could not fetch ladder from nrl.com: {e}")
+        return {}
+
+    team_stats = {}
+    for entry in positions:
+        nickname = entry.get("teamNickname", "")
+        stats = entry.get("stats", {})
+        played = int(stats.get("played", 0) or 0)
+        wins = int(stats.get("wins", 0) or 0)
+        losses = int(stats.get("lost", 0) or 0)
+        draws = int(stats.get("drawn", 0) or 0)
+        points_for = int(stats.get("points for", 0) or 0)
+        points_against = int(stats.get("points against", 0) or 0)
+        avg_win_margin = float(stats.get("average winning margin", 0) or 0)
+        avg_loss_margin = float(stats.get("average losing margin", 0) or 0)
+        win_pct = wins / played if played else 0.5
+        avg_margin = (points_for - points_against) / played if played else 0
+
+        # Store under both nickname and full name variants
+        next_team = entry.get("next", {})
+        team_stats[nickname] = {
+            "wins": wins,
+            "losses": losses,
+            "played": played,
+            "win_pct": win_pct,
+            "avg_margin": avg_margin,
+            "avg_win_margin": avg_win_margin,
+            "avg_loss_margin": avg_loss_margin,
+            "points_for": points_for,
+            "points_against": points_against,
+        }
+
+    return team_stats
+
+
+def _team_key(name, team_stats):
+    """Match a team name (from Odds API) to a key in team_stats (nicknames from nrl.com)."""
+    # Direct match
+    if name in team_stats:
+        return name
+    # Partial match — Odds API uses full names, nrl.com uses nicknames
+    name_lower = name.lower()
+    for key in team_stats:
+        if key.lower() in name_lower or name_lower.endswith(key.lower()):
+            return key
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Step 3: Fetch NRL player try stats by aggregating match centre data
+# ---------------------------------------------------------------------------
+
+def fetch_all_player_try_stats():
+    """
+    Builds season try-scoring stats by fetching completed match centre data from nrl.com.
+    Returns dict of player_id -> {name, position, team, tries, games, try_rate}.
+    """
+    season = datetime.now().year
+    player_data = {}   # player_id -> {name, position, team, tries, games}
+    player_game_ids = {}  # player_id -> set of match IDs (to count games played)
+
+    try:
+        # Fetch all rounds that have completed matches
+        draw = nrl_get(
+            "https://www.nrl.com/draw/data",
+            {"competition": NRL_COMPETITION_ID, "season": season},
+        )
+        all_rounds = [r["value"] for r in draw.get("filterRounds", [])]
+    except Exception as e:
+        print(f"  Could not fetch draw: {e}")
+        return {}
+
+    completed_matches = []
+    for rnd in all_rounds:
+        try:
+            r_data = nrl_get(
+                "https://www.nrl.com/draw/data",
+                {"competition": NRL_COMPETITION_ID, "season": season, "round": rnd},
+            )
+            for f in r_data.get("fixtures", []):
+                if f.get("matchState") in ("FullTime", "Post", "Final"):
+                    mc_url = f.get("matchCentreUrl", "")
+                    if mc_url:
+                        completed_matches.append(mc_url)
+        except Exception:
+            continue
+
+    print(f"  Fetching stats from {len(completed_matches)} completed matches...")
+
+    for mc_url in completed_matches:
+        try:
+            match_data = nrl_get(f"https://www.nrl.com{mc_url}data")
+            match_id = match_data.get("matchId", mc_url)
+
+            # Register all players from both teams (to count games played)
+            for side in ("homeTeam", "awayTeam"):
+                team_info = match_data.get(side, {})
+                team_name = team_info.get("nickName", "")
+                for player in team_info.get("players", []):
+                    pid = player.get("profileId") or player.get("playerId")
+                    if not pid:
+                        continue
+                    pname = f"{player.get('firstName', '')} {player.get('lastName', '')}".strip()
+                    position = player.get("position", "default")
+                    if pid not in player_data:
+                        player_data[pid] = {
+                            "name": pname,
+                            "position": position,
+                            "team": team_name,
+                            "tries": 0,
+                            "games": 0,
+                        }
+                    player_game_ids.setdefault(pid, set()).add(match_id)
+
+            # Count tries from timeline
+            for event in match_data.get("timeline", []):
+                if event.get("type") == "Try":
+                    pid = event.get("playerId")
+                    if pid and pid in player_data:
+                        player_data[pid]["tries"] += 1
+
+        except Exception:
+            continue
+
+    # Set games played count and calculate try rate
+    result = {}
+    for pid, info in player_data.items():
+        games = len(player_game_ids.get(pid, set()))
+        info["games"] = games
+        if games > 0:
+            info["try_rate"] = round(info["tries"] / games, 3)
+            result[info["name"]] = info
+
+    print(f"  Built try stats for {len(result)} players")
+    return result
+
+
+def fetch_player_try_stats_for_team(team_name, all_player_stats):
+    """Return players from a specific team, sorted by try rate."""
+    # Extract nickname from full name (e.g. "Canberra Raiders" -> "Raiders")
+    nickname = team_name.split()[-1] if team_name else ""
+    team_players = [
+        {"name": name, **info}
+        for name, info in all_player_stats.items()
+        if info.get("team", "").lower() in team_name.lower()
+        or (nickname and nickname.lower() == info.get("team", "").lower())
+    ]
+    if not team_players:
+        # Fallback: return top try scorers globally (try scorer odds will filter relevance)
+        team_players = [{"name": name, **info} for name, info in all_player_stats.items()]
+    return sorted(team_players, key=lambda x: x["try_rate"], reverse=True)[:15]
+
+
+# ---------------------------------------------------------------------------
+# Step 4: Fetch player prop odds (try scorers) from The Odds API
+# ---------------------------------------------------------------------------
+
+def fetch_try_scorer_odds(event_id):
+    """Returns dict of player_name -> {anytime_odds, first_odds} from available bookmakers."""
+    try:
+        data = odds_get(
+            f"/sports/rugbyleague_nrl/events/{event_id}/odds",
+            {"regions": "au", "markets": "player_anytime_try_scorer,player_first_try_scorer",
+             "oddsFormat": "decimal"},
+        )
+    except Exception:
+        return {}
+
+    player_odds = {}
+    for bookie in data.get("bookmakers", []):
+        for market in bookie.get("markets", []):
+            key = market["key"]
+            for outcome in market["outcomes"]:
+                pname = outcome["name"]
+                price = outcome["price"]
+                player_odds.setdefault(pname, {})
+                if key == "player_anytime_try_scorer":
+                    player_odds[pname].setdefault("anytime_prices", []).append(price)
+                elif key == "player_first_try_scorer":
+                    player_odds[pname].setdefault("first_prices", []).append(price)
+
+    # Average across bookmakers
+    for pname, info in player_odds.items():
+        if "anytime_prices" in info:
+            info["anytime_odds"] = round(sum(info["anytime_prices"]) / len(info["anytime_prices"]), 2)
+            del info["anytime_prices"]
+        if "first_prices" in info:
+            info["first_odds"] = round(sum(info["first_prices"]) / len(info["first_prices"]), 2)
+            del info["first_prices"]
+
+    return player_odds
+
+
+# ---------------------------------------------------------------------------
+# Step 5: Edge & probability calculations
+# ---------------------------------------------------------------------------
+
+def implied_prob(decimal_odds):
+    """Convert decimal odds to implied probability (raw, not margin-adjusted)."""
+    if not decimal_odds or decimal_odds <= 1:
+        return 0
+    return round(1 / decimal_odds, 4)
+
+
+def model_h2h_prob(home_team, away_team, team_stats):
+    """Estimate home team win probability from season stats + home advantage."""
+    home_key = _team_key(home_team, team_stats)
+    away_key = _team_key(away_team, team_stats)
+    home = team_stats.get(home_key, {})
+    away = team_stats.get(away_key, {})
+
+    home_wp = home.get("win_pct", 0.5)
+    away_wp = away.get("win_pct", 0.5)
+
+    # Relative strength + 5% home ground advantage
+    total = home_wp + away_wp
+    if total == 0:
+        return 0.5
+    home_prob = (home_wp / total) + 0.05
+    return min(max(round(home_prob, 4), 0.05), 0.95)
+
+
+def model_spread_prob(home_team, away_team, spread_point, team_stats):
+    """
+    Estimate probability that the favoured team covers the spread.
+    Uses normal distribution over average margin differential.
+    Spread_point is from home team's perspective (negative = home favoured).
+    """
+    home_key = _team_key(home_team, team_stats)
+    away_key = _team_key(away_team, team_stats)
+    home = team_stats.get(home_key, {})
+    away = team_stats.get(away_key, {})
+
+    home_margin = home.get("avg_margin", 0)
+    away_margin = away.get("avg_margin", 0)
+    expected_margin = home_margin - away_margin + 3  # +3 home advantage
+
+    # Standard deviation of NRL margins is roughly 14 points
+    std_dev = 14.0
+
+    # Probability home team beats spread: P(margin > -spread_point)
+    # spread_point is negative for home favourite (e.g. -7.5 means home must win by 8+)
+    z = (expected_margin - (-spread_point)) / std_dev
+    prob = 0.5 * (1 + math.erf(z / math.sqrt(2)))
+    return round(min(max(prob, 0.05), 0.95), 4)
+
+
+def model_ats_prob(player):
+    """Anytime try scorer model probability = historical try rate."""
+    return min(player["try_rate"], 0.95)
+
+
+def model_fts_prob(player):
+    """First try scorer model probability = try rate × positional factor."""
+    factor = POSITION_FTS_FACTOR.get(player["position"], POSITION_FTS_FACTOR["default"])
+    return round(min(player["try_rate"] * factor, 0.5), 4)
+
+
+def calc_edge(model_prob, bookie_implied):
+    """Edge = model probability minus bookie implied probability."""
+    return round(model_prob - bookie_implied, 4)
+
+
+def edge_label(edge):
+    if edge >= 0.10:
+        return "STRONG VALUE"
+    elif edge >= 0.03:
+        return "VALUE"
+    elif edge > 0:
+        return "MARGINAL"
+    else:
+        return None
+
+
+def expected_return(decimal_odds, model_prob, stake=10):
+    """Expected return per $stake = odds × model_prob × stake."""
+    return round(decimal_odds * model_prob * stake, 2)
+
+
+def value_score(edge, model_prob):
+    """Risk-adjusted score — balances edge with likelihood of winning."""
+    return round(edge * model_prob, 4)
+
+
+# ---------------------------------------------------------------------------
+# Step 6: Build per-game analysis
+# ---------------------------------------------------------------------------
+
+def analyse_game(game, team_stats, all_player_stats):
+    """Returns a dict of analysed bets for one game."""
+    home = game["home_team"]
+    away = game["away_team"]
+
+    result = {
+        "home_team": home,
+        "away_team": away,
+        "kickoff": game["kickoff"],
+        "h2h_bets": [],
+        "spread_bets": [],
+        "ats_picks": [],
+        "fts_picks": [],
+        "best_bet": None,
+        "all_value_bets": [],
+    }
+
+    # --- H2H ---
+    for team, odds in game["h2h"].items():
+        is_home = (team == home)
+        if is_home:
+            mp = model_h2h_prob(home, away, team_stats)
+        else:
+            mp = round(1 - model_h2h_prob(home, away, team_stats), 4)
+        imp = implied_prob(odds)
+        edge = calc_edge(mp, imp)
+        label = edge_label(edge)
+        bet = {
+            "team": team,
+            "odds": odds,
+            "model_prob": mp,
+            "implied_prob": imp,
+            "edge": edge,
+            "label": label,
+            "success_rate": f"{round(mp * 100)}%",
+            "exp_return": expected_return(odds, mp),
+            "value_score": value_score(edge, mp) if edge > 0 else 0,
+            "bet_type": "H2H",
+            "description": f"{team} to win",
+        }
+        result["h2h_bets"].append(bet)
+        if edge > 0:
+            result["all_value_bets"].append(bet)
+
+    # --- Spreads ---
+    for team, info in game["spreads"].items():
+        point = info["point"]
+        odds = info["price"]
+        is_home = (team == home)
+        if is_home:
+            mp = model_spread_prob(home, away, point, team_stats)
+        else:
+            mp = model_spread_prob(away, home, point, team_stats)
+        imp = implied_prob(odds)
+        edge = calc_edge(mp, imp)
+        label = edge_label(edge)
+        sign = "+" if point > 0 else ""
+        bet = {
+            "team": team,
+            "point": point,
+            "odds": odds,
+            "model_prob": mp,
+            "implied_prob": imp,
+            "edge": edge,
+            "label": label,
+            "success_rate": f"{round(mp * 100)}%",
+            "exp_return": expected_return(odds, mp),
+            "value_score": value_score(edge, mp) if edge > 0 else 0,
+            "bet_type": "Line",
+            "description": f"{team} {sign}{point}",
+        }
+        result["spread_bets"].append(bet)
+        if edge > 0:
+            result["all_value_bets"].append(bet)
+
+    # --- Try scorer odds from The Odds API ---
+    try_odds = fetch_try_scorer_odds(game["id"]) if game.get("id") else {}
+
+    # --- ATS & FTS picks (merge stats + odds) ---
+    for side_team in [home, away]:
+        players = fetch_player_try_stats_for_team(side_team, all_player_stats)
+
+        for player in players[:15]:  # top 15 by try rate
+            pname = player["name"]
+            odds_info = try_odds.get(pname, {})
+
+            # Anytime Try Scorer
+            ats_odds = odds_info.get("anytime_odds")
+            ats_mp = model_ats_prob(player)
+            if ats_odds:
+                ats_imp = implied_prob(ats_odds)
+                ats_edge = calc_edge(ats_mp, ats_imp)
+                ats_label = edge_label(ats_edge)
+                ats_bet = {
+                    "player": pname,
+                    "position": player["position"],
+                    "try_rate": player["try_rate"],
+                    "games": player["games"],
+                    "odds": ats_odds,
+                    "model_prob": ats_mp,
+                    "implied_prob": ats_imp,
+                    "edge": ats_edge,
+                    "label": ats_label,
+                    "success_rate": f"{round(ats_mp * 100)}%",
+                    "exp_return": expected_return(ats_odds, ats_mp),
+                    "value_score": value_score(ats_edge, ats_mp) if ats_edge > 0 else 0,
+                    "bet_type": "ATS",
+                    "description": f"{pname} — Anytime Try Scorer",
+                }
+                if ats_edge > 0:
+                    result["ats_picks"].append(ats_bet)
+                    result["all_value_bets"].append(ats_bet)
+
+            # First Try Scorer
+            fts_odds = odds_info.get("first_odds")
+            fts_mp = model_fts_prob(player)
+            if fts_odds:
+                fts_imp = implied_prob(fts_odds)
+                fts_edge = calc_edge(fts_mp, fts_imp)
+                fts_label = edge_label(fts_edge)
+                fts_bet = {
+                    "player": pname,
+                    "position": player["position"],
+                    "try_rate": player["try_rate"],
+                    "games": player["games"],
+                    "odds": fts_odds,
+                    "model_prob": fts_mp,
+                    "implied_prob": fts_imp,
+                    "edge": fts_edge,
+                    "label": fts_label,
+                    "success_rate": f"{round(fts_mp * 100)}%",
+                    "exp_return": expected_return(fts_odds, fts_mp),
+                    "value_score": value_score(fts_edge, fts_mp) if fts_edge > 0 else 0,
+                    "bet_type": "FTS",
+                    "description": f"{pname} — First Try Scorer",
+                }
+                if fts_edge > 0:
+                    result["fts_picks"].append(fts_bet)
+                    result["all_value_bets"].append(fts_bet)
+
+    # Sort picks by edge descending, keep top 5
+    result["ats_picks"] = sorted(result["ats_picks"], key=lambda x: x["edge"], reverse=True)[:5]
+    result["fts_picks"] = sorted(result["fts_picks"], key=lambda x: x["edge"], reverse=True)[:5]
+
+    # Best bet this game = highest value_score across all value bets
+    if result["all_value_bets"]:
+        result["best_bet"] = max(result["all_value_bets"], key=lambda x: x["value_score"])
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Step 7: Round summary — best bets across all games
+# ---------------------------------------------------------------------------
+
+def build_round_summary(games_analysis):
+    all_bets = []
+    for g in games_analysis:
+        for bet in g["all_value_bets"]:
+            bet["game_label"] = f"{g['home_team']} vs {g['away_team']}"
+            all_bets.append(bet)
+
+    best_win_rate = sorted(all_bets, key=lambda x: x["model_prob"], reverse=True)[:5]
+    best_value = sorted(all_bets, key=lambda x: x["edge"], reverse=True)[:5]
+    best_return = sorted(all_bets, key=lambda x: x["exp_return"], reverse=True)[:5]
+
+    return {
+        "best_win_rate": best_win_rate,
+        "best_value": best_value,
+        "best_return": best_return,
+        "all_bets": all_bets,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Step 8: Auto-generate suggested multis
+# ---------------------------------------------------------------------------
+
+def build_multis(summary, games_analysis):
+    all_bets = summary["all_bets"]
+    if not all_bets:
+        return {}
+
+    def multi_stats(legs):
+        combined_odds = 1.0
+        combined_prob = 1.0
+        combined_edge = 0.0
+        for leg in legs:
+            combined_odds *= leg["odds"]
+            combined_prob *= leg["model_prob"]
+        combined_odds = round(combined_odds, 2)
+        combined_prob = round(combined_prob, 4)
+        combined_edge = round(combined_prob - (1 / combined_odds), 4)
+        exp_ret = round(combined_odds * combined_prob * 10, 2)
+        return {
+            "legs": legs,
+            "combined_odds": combined_odds,
+            "combined_prob": combined_prob,
+            "combined_edge": combined_edge,
+            "exp_return": exp_ret,
+            "combined_prob_pct": f"{round(combined_prob * 100)}%",
+        }
+
+    def pick_one_per_game(candidates):
+        """Select best candidate per game to avoid duplicate legs."""
+        seen_games = set()
+        selected = []
+        for bet in candidates:
+            g = bet.get("game_label", "")
+            if g not in seen_games:
+                seen_games.add(g)
+                selected.append(bet)
+            if len(selected) >= 4:
+                break
+        return selected
+
+    # Safety multi — highest model probability bets, one per game
+    safety_candidates = sorted(all_bets, key=lambda x: x["model_prob"], reverse=True)
+    safety_legs = pick_one_per_game(safety_candidates)
+
+    # Value multi — highest edge bets, one per game
+    value_candidates = sorted(all_bets, key=lambda x: x["edge"], reverse=True)
+    value_legs = pick_one_per_game(value_candidates)
+
+    # Best of week — best bet from each game (highest value score)
+    bow_legs = []
+    for g in games_analysis:
+        if g["best_bet"]:
+            g["best_bet"]["game_label"] = f"{g['home_team']} vs {g['away_team']}"
+            bow_legs.append(g["best_bet"])
+    bow_legs = bow_legs[:5]
+
+    multis = {}
+    if len(safety_legs) >= 2:
+        multis["safety"] = multi_stats(safety_legs)
+    if len(value_legs) >= 2:
+        multis["value"] = multi_stats(value_legs)
+    if len(bow_legs) >= 2:
+        multis["best_of_week"] = multi_stats(bow_legs)
+
+    return multis
+
+
+# ---------------------------------------------------------------------------
+# Step 9: (No separate team ID map needed — nrl.com data uses nicknames)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Step 10: HTML template
+# ---------------------------------------------------------------------------
+
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NRL Tip Sheet — Round {{ round_label }}</title>
+<style>
+  :root {
+    --green: #16a34a; --red: #dc2626; --gold: #b45309; --blue: #1d4ed8;
+    --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #e2e8f0;
+    --muted: #94a3b8; --accent: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+  .container { max-width: 900px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+  h2 { font-size: 1.1rem; font-weight: 700; color: var(--accent); margin: 20px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  h3 { font-size: 0.95rem; font-weight: 600; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 8px; border-bottom: 2px solid var(--accent); margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+  .generated { color: var(--muted); font-size: 0.8rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .game-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .game-title { font-size: 1.1rem; font-weight: 700; }
+  .kickoff { color: var(--muted); font-size: 0.82rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { text-align: left; padding: 6px 8px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+  td { padding: 6px 8px; border-bottom: 1px solid #1e293b; }
+  tr:last-child td { border-bottom: none; }
+  .value-strong { color: #4ade80; font-weight: 700; }
+  .value-ok { color: #86efac; }
+  .value-marginal { color: #fbbf24; }
+  .no-value { color: var(--red); }
+  .tick { color: var(--green); }
+  .cross { color: var(--red); }
+  .best-bet { background: linear-gradient(135deg, #1a2e1a, #1e293b); border: 1px solid var(--green); border-radius: 8px; padding: 12px; margin-top: 12px; }
+  .best-bet-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #4ade80; font-weight: 700; margin-bottom: 4px; }
+  .best-bet-title { font-size: 1rem; font-weight: 700; }
+  .best-bet-meta { font-size: 0.8rem; color: var(--muted); margin-top: 4px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .multi-card { border-left: 4px solid; }
+  .multi-safety { border-color: #38bdf8; }
+  .multi-value { border-color: #a78bfa; }
+  .multi-bow { border-color: #fbbf24; }
+  .multi-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; }
+  .multi-legs { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+  .multi-stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.82rem; }
+  .multi-stat { display: flex; flex-direction: column; }
+  .multi-stat-label { color: var(--muted); font-size: 0.72rem; }
+  .multi-stat-value { font-weight: 700; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .summary-section h3 { margin-top: 0; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-label { flex: 1; }
+  .summary-odds { color: var(--accent); font-weight: 600; min-width: 40px; text-align: right; margin-left: 8px; }
+  .summary-edge { min-width: 60px; text-align: right; font-weight: 700; }
+
+  /* Cheat sheet */
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 20px; }
+  summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: 1rem; list-style: none; display: flex; align-items: center; gap: 8px; }
+  summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  .cheat-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.82rem; }
+  .cheat-table th { text-align: left; padding: 8px; background: #0f172a; color: var(--accent); }
+  .cheat-table td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .cheat-table td:first-child { font-weight: 700; white-space: nowrap; color: #f1f5f9; min-width: 160px; }
+  .cheat-table tr:last-child td { border-bottom: none; }
+
+  .label-badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+  .badge-strong { background: #14532d; color: #4ade80; }
+  .badge-value { background: #052e16; color: #86efac; }
+  .badge-marginal { background: #451a03; color: #fbbf24; }
+
+  @media (max-width: 600px) {
+    .multi-stats { gap: 10px; }
+    table { font-size: 0.76rem; }
+    th, td { padding: 5px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>NRL Tip Sheet</h1>
+      <div class="generated">Generated {{ generated_at }} &nbsp;|&nbsp; Round {{ round_label }}</div>
+    </div>
+  </div>
+
+  <!-- CHEAT SHEET -->
+  <details>
+    <summary>How to Read This Sheet — Glossary</summary>
+    <table class="cheat-table">
+      <tr><th>Term</th><th>What it means</th></tr>
+      <tr><td>Model %</td><td>What our stats model estimates the true probability to be, based on season win rates, points margins, recent form, and home advantage.</td></tr>
+      <tr><td>Implied %</td><td>What the bookmaker's odds imply the probability is. Calculated as <strong>1 ÷ decimal odds</strong>. e.g. $4.00 odds = 25% implied probability.</td></tr>
+      <tr><td>Edge</td><td>The gap between our model and the bookie. <strong>Positive = value bet</strong> (bookie has underpriced it). e.g. +12% means our model gives it 12% more chance than the bookie does.</td></tr>
+      <tr><td>✅ Green tick</td><td>Positive edge — our model thinks the bookie's odds are too generous. Potential value bet.</td></tr>
+      <tr><td>❌ Red cross</td><td>Negative edge — the bookie has overpriced this. Generally avoid.</td></tr>
+      <tr><td><span class="label-badge badge-strong">STRONG VALUE</span></td><td>Edge greater than +10%. The bookie looks significantly off — strong value bet.</td></tr>
+      <tr><td><span class="label-badge badge-value">VALUE</span></td><td>Edge between +3% and +10%. A solid value bet.</td></tr>
+      <tr><td><span class="label-badge badge-marginal">MARGINAL</span></td><td>Edge under +3%. Slight positive edge but close to breakeven. Use with caution.</td></tr>
+      <tr><td>Success Rate</td><td>Our model's estimated probability of this bet winning. e.g. 62% = wins roughly 6 times out of 10 long-term. This is NOT a guarantee.</td></tr>
+      <tr><td>Exp. Return / $10</td><td>Average $ back per $10 staked if the model is correct long-term. e.g. $14.20 = $4.20 average profit per $10. <strong>Does not mean you will win every bet.</strong></td></tr>
+      <tr><td>Try Rate / game</td><td>How many tries this player scores per game on average this season. e.g. 0.62 = scores a try in ~62% of games.</td></tr>
+      <tr><td>ATS — Anytime Try Scorer</td><td>Bet wins if the player scores a try at any point in the match.</td></tr>
+      <tr><td>FTS — First Try Scorer</td><td>Bet wins only if the player scores the <strong>very first try</strong> of the match. Higher odds, lower probability — FTS model weights towards positions that typically score first (Fullbacks, Wingers).</td></tr>
+      <tr><td>Line / Handicap</td><td>A points head start or deficit. e.g. Brisbane -7.5 = Brisbane must win by 8+ points. +7.5 = team can lose by up to 7 and still win the bet.</td></tr>
+      <tr><td>Safety Multi</td><td>Legs chosen for highest win probability. More likely to land — lower combined odds.</td></tr>
+      <tr><td>Value Multi</td><td>Legs chosen for highest edge — where bookies look most wrong. Higher odds but less likely to all land.</td></tr>
+      <tr><td>Best of Week Multi</td><td>Top recommended pick from each game combined. Balances edge and probability.</td></tr>
+      <tr><td>Combined Odds</td><td>All leg odds multiplied together. e.g. $2.00 × $3.50 = $7.00 combined.</td></tr>
+      <tr><td>Combined Prob</td><td>All model probabilities multiplied together. The realistic chance of the whole multi landing. e.g. 60% × 45% = 27%.</td></tr>
+      <tr><td>Bet365 note</td><td>Odds shown are averaged from Australian bookmakers (Sportsbet, TAB, Ladbrokes). Bet365 player prop odds are not available via our data feed — compare these prices to what you see in your Bet365 app. If Bet365 is higher, that's even better value.</td></tr>
+    </table>
+  </details>
+
+  <!-- ROUND SUMMARY -->
+  {% if summary %}
+  <h2>Round Summary — Best Bets This Week</h2>
+  <div class="summary-grid">
+
+    <div class="card summary-section">
+      <h3>Best Win Rate (Safest)</h3>
+      {% for bet in summary.best_win_rate %}
+      <div class="summary-row">
+        <span class="summary-label">{{ bet.description }}<br><small style="color:#64748b">{{ bet.game_label }}</small></span>
+        <span class="summary-odds">${{ bet.odds }}</span>
+        <span class="summary-edge value-ok">{{ (bet.model_prob * 100) | round | int }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card summary-section">
+      <h3>Best Value (Most Mispriced)</h3>
+      {% for bet in summary.best_value %}
+      <div class="summary-row">
+        <span class="summary-label">{{ bet.description }}<br><small style="color:#64748b">{{ bet.game_label }}</small></span>
+        <span class="summary-odds">${{ bet.odds }}</span>
+        <span class="summary-edge value-strong">+{{ (bet.edge * 100) | round(1) }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card summary-section">
+      <h3>Best Expected Return / $10</h3>
+      {% for bet in summary.best_return %}
+      <div class="summary-row">
+        <span class="summary-label">{{ bet.description }}<br><small style="color:#64748b">{{ bet.game_label }}</small></span>
+        <span class="summary-odds">${{ bet.odds }}</span>
+        <span class="summary-edge value-strong">${{ bet.exp_return }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- SUGGESTED MULTIS -->
+  {% if multis %}
+  <h2>Suggested Multis for the Week</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 24px;">
+
+    {% if multis.safety %}
+    <div class="card multi-card multi-safety">
+      <div class="multi-title">🛡 Safety Multi</div>
+      <div class="multi-legs">{% for leg in multis.safety.legs %}• {{ leg.description }}<br>{% endfor %}</div>
+      <div class="multi-stats">
+        <div class="multi-stat"><span class="multi-stat-label">Combined Odds</span><span class="multi-stat-value">${{ multis.safety.combined_odds }}</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Model Prob</span><span class="multi-stat-value">{{ multis.safety.combined_prob_pct }}</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Edge</span><span class="multi-stat-value {% if multis.safety.combined_edge > 0 %}value-ok{% else %}no-value{% endif %}">{{ "%+.1f" | format(multis.safety.combined_edge * 100) }}%</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Exp. Return / $10</span><span class="multi-stat-value">${{ multis.safety.exp_return }}</span></div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if multis.value %}
+    <div class="card multi-card multi-value">
+      <div class="multi-title">💎 Value Multi</div>
+      <div class="multi-legs">{% for leg in multis.value.legs %}• {{ leg.description }}<br>{% endfor %}</div>
+      <div class="multi-stats">
+        <div class="multi-stat"><span class="multi-stat-label">Combined Odds</span><span class="multi-stat-value">${{ multis.value.combined_odds }}</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Model Prob</span><span class="multi-stat-value">{{ multis.value.combined_prob_pct }}</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Edge</span><span class="multi-stat-value {% if multis.value.combined_edge > 0 %}value-ok{% else %}no-value{% endif %}">{{ "%+.1f" | format(multis.value.combined_edge * 100) }}%</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Exp. Return / $10</span><span class="multi-stat-value">${{ multis.value.exp_return }}</span></div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if multis.best_of_week %}
+    <div class="card multi-card multi-bow">
+      <div class="multi-title">⭐ Best of Week Multi</div>
+      <div class="multi-legs">{% for leg in multis.best_of_week.legs %}• {{ leg.description }}<br>{% endfor %}</div>
+      <div class="multi-stats">
+        <div class="multi-stat"><span class="multi-stat-label">Combined Odds</span><span class="multi-stat-value">${{ multis.best_of_week.combined_odds }}</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Model Prob</span><span class="multi-stat-value">{{ multis.best_of_week.combined_prob_pct }}</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Edge</span><span class="multi-stat-value {% if multis.best_of_week.combined_edge > 0 %}value-ok{% else %}no-value{% endif %}">{{ "%+.1f" | format(multis.best_of_week.combined_edge * 100) }}%</span></div>
+        <div class="multi-stat"><span class="multi-stat-label">Exp. Return / $10</span><span class="multi-stat-value">${{ multis.best_of_week.exp_return }}</span></div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- GAME BY GAME -->
+  <h2>Game by Game Analysis</h2>
+
+  {% for game in games %}
+  <div class="card">
+    <div class="game-header">
+      <div>
+        <div class="game-title">{{ game.home_team }} vs {{ game.away_team }}</div>
+        <div class="kickoff">Kickoff: {{ game.kickoff_fmt }}</div>
+      </div>
+    </div>
+
+    <!-- H2H -->
+    {% if game.h2h_bets %}
+    <h3>Head-to-Head</h3>
+    <table>
+      <tr><th>Team</th><th>Odds</th><th>Implied</th><th>Model</th><th>Edge</th><th>Success Rate</th><th>Exp. Return/$10</th></tr>
+      {% for bet in game.h2h_bets %}
+      <tr>
+        <td>{{ bet.team }}</td>
+        <td>${{ bet.odds }}</td>
+        <td>{{ (bet.implied_prob * 100) | round(1) }}%</td>
+        <td>{{ (bet.model_prob * 100) | round(1) }}%</td>
+        <td class="{% if bet.edge > 0.10 %}value-strong{% elif bet.edge > 0.03 %}value-ok{% elif bet.edge > 0 %}value-marginal{% else %}no-value{% endif %}">
+          {{ "%+.1f" | format(bet.edge * 100) }}%
+          {% if bet.edge > 0 %}<span class="tick">✅</span>{% else %}<span class="cross">❌</span>{% endif %}
+          {% if bet.label %}<span class="label-badge badge-{% if bet.label == 'STRONG VALUE' %}strong{% elif bet.label == 'VALUE' %}value{% else %}marginal{% endif %}">{{ bet.label }}</span>{% endif %}
+        </td>
+        <td>{{ bet.success_rate }}</td>
+        <td>${{ bet.exp_return }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    <!-- SPREADS -->
+    {% if game.spread_bets %}
+    <h3>Line / Handicap</h3>
+    <table>
+      <tr><th>Team</th><th>Line</th><th>Odds</th><th>Implied</th><th>Model</th><th>Edge</th><th>Success Rate</th></tr>
+      {% for bet in game.spread_bets %}
+      <tr>
+        <td>{{ bet.team }}</td>
+        <td>{{ "%+.1f" | format(bet.point) }}</td>
+        <td>${{ bet.odds }}</td>
+        <td>{{ (bet.implied_prob * 100) | round(1) }}%</td>
+        <td>{{ (bet.model_prob * 100) | round(1) }}%</td>
+        <td class="{% if bet.edge > 0.10 %}value-strong{% elif bet.edge > 0.03 %}value-ok{% elif bet.edge > 0 %}value-marginal{% else %}no-value{% endif %}">
+          {{ "%+.1f" | format(bet.edge * 100) }}%
+          {% if bet.edge > 0 %}<span class="tick">✅</span>{% else %}<span class="cross">❌</span>{% endif %}
+          {% if bet.label %}<span class="label-badge badge-{% if bet.label == 'STRONG VALUE' %}strong{% elif bet.label == 'VALUE' %}value{% else %}marginal{% endif %}">{{ bet.label }}</span>{% endif %}
+        </td>
+        <td>{{ bet.success_rate }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    <!-- ATS -->
+    {% if game.ats_picks %}
+    <h3>Anytime Try Scorer — Top Value Picks</h3>
+    <table>
+      <tr><th>Player</th><th>Position</th><th>Try Rate</th><th>Odds</th><th>Implied</th><th>Model</th><th>Edge</th><th>Success Rate</th><th>Exp. Return/$10</th></tr>
+      {% for pick in game.ats_picks %}
+      <tr>
+        <td>{{ pick.player }}</td>
+        <td>{{ pick.position }}</td>
+        <td>{{ pick.try_rate }}/g</td>
+        <td>${{ pick.odds }}</td>
+        <td>{{ (pick.implied_prob * 100) | round(1) }}%</td>
+        <td>{{ (pick.model_prob * 100) | round(1) }}%</td>
+        <td class="{% if pick.edge > 0.10 %}value-strong{% elif pick.edge > 0.03 %}value-ok{% else %}value-marginal{% endif %}">
+          {{ "%+.1f" | format(pick.edge * 100) }}% <span class="tick">✅</span>
+          {% if pick.label %}<span class="label-badge badge-{% if pick.label == 'STRONG VALUE' %}strong{% elif pick.label == 'VALUE' %}value{% else %}marginal{% endif %}">{{ pick.label }}</span>{% endif %}
+        </td>
+        <td>{{ pick.success_rate }}</td>
+        <td>${{ pick.exp_return }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    <!-- FTS -->
+    {% if game.fts_picks %}
+    <h3>First Try Scorer — Top Value Picks</h3>
+    <table>
+      <tr><th>Player</th><th>Position</th><th>Model Prob</th><th>Odds</th><th>Implied</th><th>Edge</th><th>Success Rate</th><th>Exp. Return/$10</th></tr>
+      {% for pick in game.fts_picks %}
+      <tr>
+        <td>{{ pick.player }}</td>
+        <td>{{ pick.position }}</td>
+        <td>{{ (pick.model_prob * 100) | round(1) }}%</td>
+        <td>${{ pick.odds }}</td>
+        <td>{{ (pick.implied_prob * 100) | round(1) }}%</td>
+        <td class="{% if pick.edge > 0.10 %}value-strong{% elif pick.edge > 0.03 %}value-ok{% else %}value-marginal{% endif %}">
+          {{ "%+.1f" | format(pick.edge * 100) }}% <span class="tick">✅</span>
+          {% if pick.label %}<span class="label-badge badge-{% if pick.label == 'STRONG VALUE' %}strong{% elif pick.label == 'VALUE' %}value{% else %}marginal{% endif %}">{{ pick.label }}</span>{% endif %}
+        </td>
+        <td>{{ pick.success_rate }}</td>
+        <td>${{ pick.exp_return }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    <!-- BEST BET -->
+    {% if game.best_bet %}
+    <div class="best-bet">
+      <div class="best-bet-label">★ Best Bet This Game</div>
+      <div class="best-bet-title">{{ game.best_bet.description }} — ${{ game.best_bet.odds }}</div>
+      <div class="best-bet-meta">
+        <span>{% if game.best_bet.label %}<span class="label-badge badge-{% if game.best_bet.label == 'STRONG VALUE' %}strong{% elif game.best_bet.label == 'VALUE' %}value{% else %}marginal{% endif %}">{{ game.best_bet.label }}</span>{% endif %}</span>
+        <span>Success rate: {{ game.best_bet.success_rate }}</span>
+        <span>Exp. return / $10: ${{ game.best_bet.exp_return }}</span>
+        <span>Edge: {{ "%+.1f" | format(game.best_bet.edge * 100) }}%</span>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center; color: var(--muted); padding: 40px;">
+    No upcoming NRL games found — check back closer to the round, or verify your API keys in config.py.
+  </div>
+  {% endfor %}
+
+  <div style="text-align:center; color: var(--muted); font-size: 0.75rem; margin-top: 24px; padding-bottom: 24px;">
+    Odds sourced from Australian bookmakers via The Odds API. Stats from API-Sports Rugby.<br>
+    Bet365 player prop odds not available via free API — compare displayed prices to your Bet365 app.<br>
+    This is a statistical model, not financial advice. Gamble responsibly.
+  </div>
+
+</div>
+</body>
+</html>"""
+
+
+# ---------------------------------------------------------------------------
+# Step 11: Format kickoff time
+# ---------------------------------------------------------------------------
+
+def fmt_kickoff(iso_str):
+    try:
+        dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+        # Convert UTC to AEST (UTC+10)
+        from datetime import timedelta
+        aest = dt + timedelta(hours=10)
+        return aest.strftime("%A %d %b, %I:%M %p AEST")
+    except Exception:
+        return iso_str or "TBC"
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    print("NRL Tip Sheet Generator")
+    print("=" * 40)
+
+    print("Fetching team stats from nrl.com...")
+    team_stats = fetch_team_stats()
+    print(f"  Found stats for {len(team_stats)} teams")
+
+    print("Fetching upcoming NRL fixtures + odds...")
+    fixtures = fetch_fixtures_with_odds()
+    print(f"  Found {len(fixtures)} upcoming games")
+
+    if not fixtures:
+        print("No fixtures found — generating tip sheet with no-games message.")
+
+    print("Fetching player try stats from nrl.com...")
+    all_player_stats = fetch_all_player_try_stats()
+
+    print("Analysing games...")
+    games_analysis = []
+    for game in fixtures:
+        print(f"  Analysing: {game['home_team']} vs {game['away_team']}")
+        analysis = analyse_game(game, team_stats, all_player_stats)
+        analysis["kickoff_fmt"] = fmt_kickoff(game.get("kickoff", ""))
+        games_analysis.append(analysis)
+
+    print("Building round summary and multis...")
+    summary = build_round_summary(games_analysis) if games_analysis else None
+    multis = build_multis(summary, games_analysis) if summary else {}
+
+    round_label = f"Week of {datetime.now().strftime('%d %b %Y')}"
+    generated_at = datetime.now().strftime("%d %b %Y %I:%M %p")
+
+    print("Rendering HTML...")
+    template = Template(HTML_TEMPLATE)
+    html = template.render(
+        games=games_analysis,
+        summary=summary,
+        multis=multis,
+        round_label=round_label,
+        generated_at=generated_at,
+    )
+
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"\nDone! Open {OUTPUT_FILE} in your browser.")
+    print(f"Or visit your GitHub Pages URL once deployed.")
+
+
+if __name__ == "__main__":
+    main()

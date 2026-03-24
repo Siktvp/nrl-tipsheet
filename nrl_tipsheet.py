@@ -164,17 +164,132 @@ def fetch_team_stats():
     return team_stats
 
 
-def _team_key(name, team_stats):
-    """Match a team name (from Odds API) to a key in team_stats (nicknames from nrl.com)."""
-    # Direct match
-    if name in team_stats:
+def _team_key(name, lookup):
+    """Match a team name (from Odds API) to a key in a stats dict (nicknames from nrl.com)."""
+    if name in lookup:
         return name
-    # Partial match — Odds API uses full names, nrl.com uses nicknames
     name_lower = name.lower()
-    for key in team_stats:
+    for key in lookup:
         if key.lower() in name_lower or name_lower.endswith(key.lower()):
             return key
     return None
+
+
+# ---------------------------------------------------------------------------
+# Step 2b: Fetch team form stats (home/away splits + recent form) from draw API
+# ---------------------------------------------------------------------------
+
+def fetch_team_form_stats():
+    """
+    Builds per-team form data from completed fixture results using the NRL draw API.
+    No match centre calls needed — scores are available in fixture data.
+    Returns dict of team_nickname -> form data including home/away records and recent form.
+    """
+    season = datetime.now().year
+    team_results = {}  # nickname -> list of game result dicts (chronological)
+
+    try:
+        draw = nrl_get(
+            "https://www.nrl.com/draw/data",
+            {"competition": NRL_COMPETITION_ID, "season": season},
+        )
+        all_rounds = [r["value"] for r in draw.get("filterRounds", [])]
+    except Exception as e:
+        print(f"  Could not fetch draw for form stats: {e}")
+        return {}
+
+    for rnd in all_rounds:
+        try:
+            r_data = nrl_get(
+                "https://www.nrl.com/draw/data",
+                {"competition": NRL_COMPETITION_ID, "season": season, "round": rnd},
+            )
+            for f in r_data.get("fixtures", []):
+                if f.get("matchState") not in ("FullTime", "Post", "Final"):
+                    continue
+
+                home_obj = f.get("homeTeam", {})
+                away_obj = f.get("awayTeam", {})
+                home_nick = home_obj.get("nickName") or home_obj.get("teamNickname", "")
+                away_nick = away_obj.get("nickName") or away_obj.get("teamNickname", "")
+
+                # Try multiple score field names used by nrl.com API
+                home_score = (
+                    home_obj.get("score")
+                    or home_obj.get("teamScore")
+                    or f.get("homeScore")
+                    or f.get("homeTeamScore")
+                )
+                away_score = (
+                    away_obj.get("score")
+                    or away_obj.get("teamScore")
+                    or f.get("awayScore")
+                    or f.get("awayTeamScore")
+                )
+
+                if home_nick and away_nick and home_score is not None and away_score is not None:
+                    home_score = int(home_score)
+                    away_score = int(away_score)
+                    home_margin = home_score - away_score
+                    home_win = home_margin > 0
+
+                    team_results.setdefault(home_nick, []).append({
+                        "round": rnd,
+                        "is_home": True,
+                        "score_for": home_score,
+                        "score_against": away_score,
+                        "margin": home_margin,
+                        "win": home_win,
+                    })
+                    team_results.setdefault(away_nick, []).append({
+                        "round": rnd,
+                        "is_home": False,
+                        "score_for": away_score,
+                        "score_against": home_score,
+                        "margin": -home_margin,
+                        "win": not home_win,
+                    })
+        except Exception:
+            continue
+
+    # Compute derived stats per team
+    form_stats = {}
+    for nick, results in team_results.items():
+        home_games = [r for r in results if r["is_home"]]
+        away_games = [r for r in results if not r["is_home"]]
+
+        home_wins = sum(1 for r in home_games if r["win"])
+        away_wins = sum(1 for r in away_games if r["win"])
+
+        # Recent form: last 5 games, weights [1,2,3,4,5] oldest→newest
+        last5 = results[-5:]
+        weights = list(range(1, len(last5) + 1))
+        w_total = sum(weights)
+        if w_total:
+            recent_form_rating = sum(r["win"] * w for r, w in zip(last5, weights)) / w_total
+            recent_avg_margin = sum(r["margin"] * w for r, w in zip(last5, weights)) / w_total
+        else:
+            recent_form_rating = 0.5
+            recent_avg_margin = 0.0
+
+        # Home margin advantage vs away (for spread model)
+        home_margins = [r["margin"] for r in home_games]
+        home_margin_advantage = (sum(home_margins) / len(home_margins)) if home_margins else 3.0
+
+        form_stats[nick] = {
+            "home_wins": home_wins,
+            "home_played": len(home_games),
+            "home_win_pct": home_wins / len(home_games) if home_games else 0.5,
+            "away_wins": away_wins,
+            "away_played": len(away_games),
+            "away_win_pct": away_wins / len(away_games) if away_games else 0.5,
+            "recent_form_rating": round(recent_form_rating, 4),
+            "recent_avg_margin": round(recent_avg_margin, 2),
+            "home_margin_advantage": round(home_margin_advantage, 2),
+        }
+
+    print(f"  Built form stats for {len(form_stats)} teams")
+    return form_stats
 
 
 # ---------------------------------------------------------------------------
@@ -184,14 +299,15 @@ def _team_key(name, team_stats):
 def fetch_all_player_try_stats():
     """
     Builds season try-scoring stats by fetching completed match centre data from nrl.com.
-    Returns dict of player_id -> {name, position, team, tries, games, try_rate}.
+    Returns dict of player_name -> {name, position, team, tries, games, try_rate, recent_try_rate}.
+    recent_try_rate is based on the last 4 games (blended into model for recency bias).
     """
     season = datetime.now().year
-    player_data = {}   # player_id -> {name, position, team, tries, games}
-    player_game_ids = {}  # player_id -> set of match IDs (to count games played)
+    player_data = {}       # pid -> {name, position, team, tries}
+    player_game_ids = {}   # pid -> set of match IDs (deduplicate games played)
+    player_game_tries = {} # pid -> list of 0/1 in chronological order (for recent form)
 
     try:
-        # Fetch all rounds that have completed matches
         draw = nrl_get(
             "https://www.nrl.com/draw/data",
             {"competition": NRL_COMPETITION_ID, "season": season},
@@ -223,7 +339,15 @@ def fetch_all_player_try_stats():
             match_data = nrl_get(f"https://www.nrl.com{mc_url}data")
             match_id = match_data.get("matchId", mc_url)
 
-            # Register all players from both teams (to count games played)
+            # Collect try scorer pids for this match first
+            match_try_pids = set()
+            for event in match_data.get("timeline", []):
+                if event.get("type") == "Try":
+                    pid = event.get("playerId")
+                    if pid:
+                        match_try_pids.add(pid)
+
+            # Register all players from both teams
             for side in ("homeTeam", "awayTeam"):
                 team_info = match_data.get(side, {})
                 team_name = team_info.get("nickName", "")
@@ -239,27 +363,24 @@ def fetch_all_player_try_stats():
                             "position": position,
                             "team": team_name,
                             "tries": 0,
-                            "games": 0,
                         }
                     player_game_ids.setdefault(pid, set()).add(match_id)
-
-            # Count tries from timeline
-            for event in match_data.get("timeline", []):
-                if event.get("type") == "Try":
-                    pid = event.get("playerId")
-                    if pid and pid in player_data:
-                        player_data[pid]["tries"] += 1
+                    scored = 1 if pid in match_try_pids else 0
+                    player_data[pid]["tries"] += scored
+                    player_game_tries.setdefault(pid, []).append(scored)
 
         except Exception:
             continue
 
-    # Set games played count and calculate try rate
+    # Calculate try rates including recent form (last 4 games)
     result = {}
     for pid, info in player_data.items():
         games = len(player_game_ids.get(pid, set()))
         info["games"] = games
         if games > 0:
             info["try_rate"] = round(info["tries"] / games, 3)
+            recent = player_game_tries.get(pid, [])[-4:]
+            info["recent_try_rate"] = round(sum(recent) / len(recent), 3) if len(recent) >= 2 else info["try_rate"]
             result[info["name"]] = info
 
     print(f"  Built try stats for {len(result)} players")
@@ -333,58 +454,92 @@ def implied_prob(decimal_odds):
     return round(1 / decimal_odds, 4)
 
 
-def model_h2h_prob(home_team, away_team, team_stats):
-    """Estimate home team win probability from season stats + home advantage."""
+def model_h2h_prob(home_team, away_team, team_stats, team_form=None):
+    """
+    Estimate home team win probability.
+    Blends home/away location-specific win% with recent form (last 5 games weighted).
+    Home advantage is implicit in home_win_pct rather than a fixed bonus.
+    Falls back to season win% + fixed 5% if form data is unavailable.
+    """
+    team_form = team_form or {}
     home_key = _team_key(home_team, team_stats)
     away_key = _team_key(away_team, team_stats)
-    home = team_stats.get(home_key, {})
-    away = team_stats.get(away_key, {})
+    home_ts = team_stats.get(home_key, {})
+    away_ts = team_stats.get(away_key, {})
+    home_form = team_form.get(home_key, {})
+    away_form = team_form.get(away_key, {})
 
-    home_wp = home.get("win_pct", 0.5)
-    away_wp = away.get("win_pct", 0.5)
+    # Location-specific win% (home team's home record, away team's away record)
+    home_base = home_form.get("home_win_pct", home_ts.get("win_pct", 0.5))
+    away_base = away_form.get("away_win_pct", away_ts.get("win_pct", 0.5))
 
-    # Relative strength + 5% home ground advantage
-    total = home_wp + away_wp
+    # Recent form rating (last 5 games, recency-weighted)
+    home_recent = home_form.get("recent_form_rating", home_base)
+    away_recent = away_form.get("recent_form_rating", away_base)
+
+    # Blend: 50% location record, 50% recent form
+    home_strength = 0.5 * home_base + 0.5 * home_recent
+    away_strength = 0.5 * away_base + 0.5 * away_recent
+
+    total = home_strength + away_strength
     if total == 0:
         return 0.5
-    home_prob = (home_wp / total) + 0.05
-    return min(max(round(home_prob, 4), 0.05), 0.95)
+    return min(max(round(home_strength / total, 4), 0.05), 0.95)
 
 
-def model_spread_prob(home_team, away_team, spread_point, team_stats):
+def model_spread_prob(home_team, away_team, spread_point, team_stats, team_form=None):
     """
-    Estimate probability that the favoured team covers the spread.
-    Uses normal distribution over average margin differential.
+    Estimate probability that the home team covers the spread.
+    Blends season avg_margin (60%) with recent avg_margin (40%) for better recency.
+    Home advantage is derived from actual home margin data rather than a fixed +3.
     Spread_point is from home team's perspective (negative = home favoured).
     """
+    team_form = team_form or {}
     home_key = _team_key(home_team, team_stats)
     away_key = _team_key(away_team, team_stats)
-    home = team_stats.get(home_key, {})
-    away = team_stats.get(away_key, {})
+    home_ts = team_stats.get(home_key, {})
+    away_ts = team_stats.get(away_key, {})
+    home_form = team_form.get(home_key, {})
+    away_form = team_form.get(away_key, {})
 
-    home_margin = home.get("avg_margin", 0)
-    away_margin = away.get("avg_margin", 0)
-    expected_margin = home_margin - away_margin + 3  # +3 home advantage
+    home_season = home_ts.get("avg_margin", 0)
+    away_season = away_ts.get("avg_margin", 0)
+    home_recent = home_form.get("recent_avg_margin", home_season)
+    away_recent = away_form.get("recent_avg_margin", away_season)
 
-    # Standard deviation of NRL margins is roughly 14 points
+    # 60% season, 40% recent form
+    home_eff = 0.6 * home_season + 0.4 * home_recent
+    away_eff = 0.6 * away_season + 0.4 * away_recent
+
+    # Home advantage from actual home margin data (default 3 if no data)
+    home_advantage = home_form.get("home_margin_advantage", 3.0)
+    expected_margin = home_eff - away_eff + home_advantage
+
     std_dev = 14.0
-
-    # Probability home team beats spread: P(margin > -spread_point)
-    # spread_point is negative for home favourite (e.g. -7.5 means home must win by 8+)
     z = (expected_margin - (-spread_point)) / std_dev
     prob = 0.5 * (1 + math.erf(z / math.sqrt(2)))
     return round(min(max(prob, 0.05), 0.95), 4)
 
 
 def model_ats_prob(player):
-    """Anytime try scorer model probability = historical try rate."""
-    return min(player["try_rate"], 0.95)
+    """
+    Anytime try scorer model probability.
+    Blends season try_rate (60%) with recent try_rate from last 4 games (40%).
+    """
+    recent = player.get("recent_try_rate", player["try_rate"])
+    blended = 0.6 * player["try_rate"] + 0.4 * recent
+    return round(min(blended, 0.95), 4)
 
 
 def model_fts_prob(player):
-    """First try scorer model probability = try rate × positional factor."""
+    """
+    First try scorer model probability.
+    Blends season and recent try rates then applies positional factor.
+    """
+    recent = player.get("recent_try_rate", player["try_rate"])
+    blended = 0.6 * player["try_rate"] + 0.4 * recent
     factor = POSITION_FTS_FACTOR.get(player["position"], POSITION_FTS_FACTOR["default"])
-    return round(min(player["try_rate"] * factor, 0.5), 4)
+    return round(min(blended * factor, 0.5), 4)
 
 
 def calc_edge(model_prob, bookie_implied):
@@ -417,7 +572,7 @@ def value_score(edge, model_prob):
 # Step 6: Build per-game analysis
 # ---------------------------------------------------------------------------
 
-def analyse_game(game, team_stats, all_player_stats):
+def analyse_game(game, team_stats, team_form, all_player_stats):
     """Returns a dict of analysed bets for one game."""
     home = game["home_team"]
     away = game["away_team"]
@@ -438,9 +593,9 @@ def analyse_game(game, team_stats, all_player_stats):
     for team, odds in game["h2h"].items():
         is_home = (team == home)
         if is_home:
-            mp = model_h2h_prob(home, away, team_stats)
+            mp = model_h2h_prob(home, away, team_stats, team_form)
         else:
-            mp = round(1 - model_h2h_prob(home, away, team_stats), 4)
+            mp = round(1 - model_h2h_prob(home, away, team_stats, team_form), 4)
         imp = implied_prob(odds)
         edge = calc_edge(mp, imp)
         label = edge_label(edge)
@@ -467,9 +622,9 @@ def analyse_game(game, team_stats, all_player_stats):
         odds = info["price"]
         is_home = (team == home)
         if is_home:
-            mp = model_spread_prob(home, away, point, team_stats)
+            mp = model_spread_prob(home, away, point, team_stats, team_form)
         else:
-            mp = model_spread_prob(away, home, point, team_stats)
+            mp = model_spread_prob(away, home, point, team_stats, team_form)
         imp = implied_prob(odds)
         edge = calc_edge(mp, imp)
         label = edge_label(edge)
@@ -1001,9 +1156,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   {% endfor %}
 
   <div style="text-align:center; color: var(--muted); font-size: 0.75rem; margin-top: 24px; padding-bottom: 24px;">
-    Odds sourced from Australian bookmakers via The Odds API. Stats from API-Sports Rugby.<br>
+    Odds sourced from Australian bookmakers via The Odds API. Stats from nrl.com.<br>
     Bet365 player prop odds not available via free API — compare displayed prices to your Bet365 app.<br>
-    This is a statistical model, not financial advice. Gamble responsibly.
+    This is a statistical model, not financial advice. Gamble responsibly.<br><br>
+    <a href="https://siktvp.github.io/nrl-tipsheet/tipsheet_output.html" style="color: var(--accent);">
+      📱 siktvp.github.io/nrl-tipsheet
+    </a>
   </div>
 
 </div>
@@ -1038,6 +1196,9 @@ def main():
     team_stats = fetch_team_stats()
     print(f"  Found stats for {len(team_stats)} teams")
 
+    print("Fetching team form stats from nrl.com...")
+    team_form = fetch_team_form_stats()
+
     print("Fetching upcoming NRL fixtures + odds...")
     fixtures = fetch_fixtures_with_odds()
     print(f"  Found {len(fixtures)} upcoming games")
@@ -1052,7 +1213,7 @@ def main():
     games_analysis = []
     for game in fixtures:
         print(f"  Analysing: {game['home_team']} vs {game['away_team']}")
-        analysis = analyse_game(game, team_stats, all_player_stats)
+        analysis = analyse_game(game, team_stats, team_form, all_player_stats)
         analysis["kickoff_fmt"] = fmt_kickoff(game.get("kickoff", ""))
         games_analysis.append(analysis)
 
@@ -1077,7 +1238,7 @@ def main():
         f.write(html)
 
     print(f"\nDone! Open {OUTPUT_FILE} in your browser.")
-    print(f"Or visit your GitHub Pages URL once deployed.")
+    print(f"Or visit: https://siktvp.github.io/nrl-tipsheet/tipsheet_output.html")
 
 
 if __name__ == "__main__":

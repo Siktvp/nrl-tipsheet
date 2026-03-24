@@ -1,9 +1,9 @@
 name: Generate NRL Tip Sheet
 
 on:
-  # Runs every Thursday at 10pm UTC = Friday 8am AEST (before the weekend round)
+  # Runs every Monday at 10pm UTC = Tuesday 8am AEST (after the weekend round, before the next)
   schedule:
-    - cron: "0 22 * * 4"
+    - cron: "0 22 * * 1"
 
   # Also lets you trigger it manually from GitHub → Actions tab (works from your phone)
   workflow_dispatch:

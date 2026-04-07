@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "schema_version": 1,
+    "created_at": "2026-03-23T22:00:00Z",
+    "last_updated": "2026-04-07T00:00:00Z"
+  },
+  "rounds": [
+    {
+      "round_id": "2026-R07",
+      "season": 2026,
+      "round_number": 7,
+      "generated_at": "2026-03-23T22:00:00Z",
+      "bankroll_start": 80.0,
+      "stake_per_game": 10.0,
+      "strategy": "flat_compounding",
+      "games": [],
+      "round_result": {
+        "resolved_at": "2026-03-30T00:00:00Z",
+        "wins": 6,
+        "losses": 2,
+        "total_staked": 80.0,
+        "total_returned": 110.0,
+        "net_profit": 30.0,
+        "bankroll_end": 110.0
+      }
+    }
+  ],
+  "lifetime": {
+    "total_rounds": 1,
+    "total_bets": 8,
+    "total_wins": 6,
+    "total_staked": 80.0,
+    "total_returned": 110.0,
+    "net_profit": 30.0,
+    "roi_pct": 37.5,
+    "win_rate": 75.0,
+    "by_label": {
+      "STRONG VALUE": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0},
+      "VALUE": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0},
+      "MARGINAL": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0}
+    },
+    "by_bet_type": {
+      "H2H": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0},
+      "Line": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0},
+      "ATS": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0},
+      "FTS": {"bets": 0, "wins": 0, "staked": 0.0, "returned": 0.0}
+    },
+    "model_calibration": [
+      {"bucket": "0-10%", "bets": 0, "wins": 0},
+      {"bucket": "10-20%", "bets": 0, "wins": 0},
+      {"bucket": "20-30%", "bets": 0, "wins": 0},
+      {"bucket": "30-40%", "bets": 0, "wins": 0},
+      {"bucket": "40-50%", "bets": 0, "wins": 0},
+      {"bucket": "50-60%", "bets": 0, "wins": 0},
+      {"bucket": "60-70%", "bets": 0, "wins": 0},
+      {"bucket": "70-80%", "bets": 0, "wins": 0},
+      {"bucket": "80-90%", "bets": 0, "wins": 0},
+      {"bucket": "90-100%", "bets": 0, "wins": 0}
+    ],
+    "bankroll_history": [
+      {"round_id": "2026-R07", "bankroll": 110.0, "net_profit": 30.0}
+    ]
+  }
+}

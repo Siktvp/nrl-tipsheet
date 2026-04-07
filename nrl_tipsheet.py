@@ -13,6 +13,7 @@ import requests
 from datetime import datetime, timezone
 from jinja2 import Template
 from bs4 import BeautifulSoup
+from nrl_tracker import load_db, save_db, save_round_predictions, get_current_bankroll
 
 # ---------------------------------------------------------------------------
 # Config — use environment variables (GitHub Actions) or fall back to config.py
@@ -63,6 +64,50 @@ def nrl_get(url, params=None):
     r = requests.get(url, params=params or {}, headers=HEADERS, timeout=15)
     r.raise_for_status()
     return r.json()
+
+
+# ---------------------------------------------------------------------------
+# Round number detection
+# ---------------------------------------------------------------------------
+
+def fetch_upcoming_round_number(db=None):
+    """
+    Detect the upcoming NRL round number by querying the draw API.
+    Returns the first round where no fixtures are completed yet.
+    Falls back to last recorded round_id + 1 if the API fails.
+    """
+    season = datetime.now().year
+    try:
+        draw = nrl_get(
+            "https://www.nrl.com/draw/data",
+            {"competition": NRL_COMPETITION_ID, "season": season},
+        )
+        all_rounds = [r["value"] for r in draw.get("filterRounds", [])]
+        for rnd in all_rounds:
+            try:
+                r_data = nrl_get(
+                    "https://www.nrl.com/draw/data",
+                    {"competition": NRL_COMPETITION_ID, "season": season, "round": rnd},
+                )
+                fixtures = r_data.get("fixtures", [])
+                completed = [f for f in fixtures if f.get("matchState") in ("FullTime", "Post", "Final")]
+                if not completed:
+                    return int(rnd)
+            except Exception:
+                continue
+        return int(all_rounds[-1]) + 1 if all_rounds else 1
+    except Exception as e:
+        print(f"  WARNING: Could not detect round number from draw API: {e}")
+        # Fallback: increment from last known round in DB
+        if db:
+            existing = db.get("rounds", [])
+            if existing:
+                last_id = sorted(r["round_id"] for r in existing)[-1]
+                try:
+                    return int(last_id.split("-R")[-1]) + 1
+                except Exception:
+                    pass
+        return 1
 
 
 # ---------------------------------------------------------------------------
@@ -909,7 +954,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="header">
     <div>
       <h1>NRL Tip Sheet</h1>
-      <div class="generated">Generated {{ generated_at }} &nbsp;|&nbsp; Round {{ round_label }}</div>
+      <div class="generated">Generated {{ generated_at }} &nbsp;|&nbsp; {{ round_label }}</div>
+    </div>
+    <div>
+      <a href="dashboard.html" style="color: var(--accent); font-size: 0.85rem; text-decoration: none;">📊 Performance Dashboard</a>
     </div>
   </div>
 
@@ -1192,6 +1240,15 @@ def main():
     print("NRL Tip Sheet Generator")
     print("=" * 40)
 
+    print("Loading bet history...")
+    db = load_db()
+    bankroll = get_current_bankroll(db)
+    print(f"  Current bankroll: ${bankroll:.2f}")
+
+    print("Detecting upcoming round number...")
+    round_number = fetch_upcoming_round_number(db)
+    print(f"  Upcoming round: {round_number}")
+
     print("Fetching team stats from nrl.com...")
     team_stats = fetch_team_stats()
     print(f"  Found stats for {len(team_stats)} teams")
@@ -1221,8 +1278,12 @@ def main():
     summary = build_round_summary(games_analysis) if games_analysis else None
     multis = build_multis(summary, games_analysis) if summary else {}
 
-    round_label = f"Week of {datetime.now().strftime('%d %b %Y')}"
+    round_label = f"Round {round_number} — {datetime.now().strftime('%d %b %Y')}"
     generated_at = datetime.now().strftime("%d %b %Y %I:%M %p")
+
+    print("Saving round predictions to history_db.json...")
+    save_round_predictions(db, datetime.now().year, round_number, games_analysis, bankroll)
+    save_db(db)
 
     print("Rendering HTML...")
     template = Template(HTML_TEMPLATE)

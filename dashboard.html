@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NRL Tracker — Performance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --green: #16a34a; --red: #dc2626; --gold: #b45309; --blue: #1d4ed8;
+    --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #e2e8f0;
+    --muted: #94a3b8; --accent: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+  .container { max-width: 960px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+  h2 { font-size: 1.1rem; font-weight: 700; color: var(--accent); margin: 24px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 8px; border-bottom: 2px solid var(--accent); margin-bottom: 24px; flex-wrap: wrap; gap: 8px; }
+  .header-links { display: flex; gap: 16px; align-items: center; }
+  .header-links a { color: var(--accent); font-size: 0.85rem; text-decoration: none; }
+  .header-links a:hover { text-decoration: underline; }
+  .generated { color: var(--muted); font-size: 0.8rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .kpi-value.positive { color: #4ade80; }
+  .kpi-value.negative { color: #f87171; }
+  .kpi-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .chart-container { position: relative; height: 280px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .chart-grid { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { text-align: left; padding: 8px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); background: #0f172a; }
+  td { padding: 8px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; }
+  .badge-pending { background: #451a03; color: #fbbf24; }
+  .badge-win { background: #14532d; color: #4ade80; }
+  .badge-loss { background: #450a0a; color: #f87171; }
+  .badge-recommended { background: #0c1a3a; color: var(--accent); }
+  .badge-caution { background: #451a03; color: #fbbf24; }
+  .badge-avoid { background: #450a0a; color: #f87171; }
+  .badge-baseline { background: #1e293b; color: var(--muted); }
+  .positive { color: #4ade80; }
+  .negative { color: #f87171; }
+  .neutral { color: var(--muted); }
+  .empty-state { text-align: center; color: var(--muted); padding: 40px 20px; }
+  .empty-state-icon { font-size: 2rem; margin-bottom: 8px; }
+  .empty-state p { margin-top: 4px; font-size: 0.85rem; }
+  .strategy-note { background: #0c1a2e; border: 1px solid #1d4ed8; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.82rem; color: var(--muted); }
+  .strategy-note strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>NRL Tracker Dashboard</h1>
+      <div class="generated">Generated 07 Apr 2026 08:23 PM</div>
+    </div>
+    <div class="header-links">
+      <a href="tipsheet_output.html">Tipsheet</a>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-value">1</div>
+      <div class="kpi-label">Rounds Tracked</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value positive">
+        75.0%
+      </div>
+      <div class="kpi-label">Win Rate</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value positive">
+        +37.5%
+      </div>
+      <div class="kpi-label">Lifetime ROI</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value positive">
+        $110.00
+      </div>
+      <div class="kpi-label">Current Bankroll</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value positive">
+        +30.00
+      </div>
+      <div class="kpi-label">Net Profit ($)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value neutral">8</div>
+      <div class="kpi-label">Total Bets</div>
+    </div>
+  </div>
+
+  <!-- Bankroll Growth -->
+  <h2>Bankroll Growth</h2>
+  
+  <div class="card">
+    <div class="strategy-note">
+      <strong>Your Strategy</strong> (compounding): divide bankroll by 8 games each round and reinvest profits.<br>
+      <strong>Flat $10</strong>: always stake $10 per game regardless of bankroll.<br>
+      <strong>Quarter-Kelly</strong>: stake sized to model edge, capped at 25% of bankroll per bet.
+    </div>
+    <div class="chart-container">
+      <canvas id="bankrollChart"></canvas>
+    </div>
+  </div>
+  
+
+  <!-- Charts Row -->
+  <div class="chart-grid">
+
+    <!-- Win Rate per Round -->
+    <div>
+      <h2>Win Rate by Round</h2>
+      
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="winrateChart"></canvas>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Performance by Label -->
+    <div>
+      <h2>Performance by Label</h2>
+      
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="labelChart"></canvas>
+        </div>
+      </div>
+      
+    </div>
+
+  </div>
+
+  <!-- Model Calibration -->
+  <h2>Model Calibration</h2>
+  
+  <div class="card empty-state">
+    <div class="empty-state-icon">🎯</div>
+    <strong>Not enough data yet</strong>
+    <p>Model calibration chart requires at least 10 resolved bets across probability buckets.</p>
+  </div>
+  
+
+  <!-- Strategy Recommendations -->
+  <h2>Strategy Filter Analysis</h2>
+  
+  <div class="card empty-state">
+    <div class="empty-state-icon">💡</div>
+    <strong>Not enough data yet</strong>
+    <p>Filter recommendations appear after at least 10 bets per category are resolved.</p>
+  </div>
+  
+
+  <!-- Round-by-Round Table -->
+  <h2>Round History</h2>
+  <div class="card">
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Round</th>
+          <th>Bets</th>
+          <th>W / L</th>
+          <th>Staked</th>
+          <th>Returned</th>
+          <th>Profit</th>
+          <th>ROI</th>
+          <th>Bankroll</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td><strong>2026-R07</strong></td>
+          <td>8</td>
+          <td>
+            
+            <span class="positive">6W</span> / <span class="negative">2L</span>
+            
+          </td>
+          <td>$80.00</td>
+          <td>$110.00</td>
+          <td class="positive">
+            +30.00
+          </td>
+          <td class="positive">
+            +37.5%
+          </td>
+          <td class="positive">
+            $110.00
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+
+  <div style="text-align:center; color: var(--muted); font-size: 0.75rem; margin-top: 24px; padding-bottom: 24px;">
+    This is a statistical tracking tool, not financial advice. Gamble responsibly.
+  </div>
+
+</div>
+
+<script>
+const chartDefaults = {
+  color: '#94a3b8',
+  borderColor: '#334155',
+};
+Chart.defaults.color = chartDefaults.color;
+Chart.defaults.borderColor = chartDefaults.borderColor;
+
+
+// Bankroll Growth Chart
+new Chart(document.getElementById('bankrollChart'), {
+  type: 'line',
+  data: {
+    labels: ["Start", "2026-R07"],
+    datasets: [
+      {
+        label: 'Your Strategy (Compounding)',
+        data: [80.0, 110.0],
+        borderColor: '#4ade80',
+        backgroundColor: 'rgba(74,222,128,0.08)',
+        tension: 0.3,
+        borderWidth: 2.5,
+        pointRadius: 4,
+      },
+      {
+        label: 'Flat $10/game',
+        data: [80.0, 110.0],
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56,189,248,0.05)',
+        tension: 0.3,
+        borderWidth: 2,
+        borderDash: [5,3],
+        pointRadius: 3,
+      },
+      {
+        label: 'Quarter-Kelly',
+        data: [80.0, 110.0],
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167,139,250,0.05)',
+        tension: 0.3,
+        borderWidth: 2,
+        borderDash: [2,4],
+        pointRadius: 3,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { color: '#94a3b8', font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+      y: {
+        grid: { color: '#1e293b' },
+        ticks: { color: '#94a3b8', callback: v => '$' + v },
+      },
+    },
+  },
+});
+
+
+
+// Win Rate Chart
+new Chart(document.getElementById('winrateChart'), {
+  type: 'bar',
+  data: {
+    labels: ["R07"],
+    datasets: [{
+      label: 'Win Rate %',
+      data: [75.0],
+      backgroundColor: ["rgba(74,222,128,0.7)"],
+      borderRadius: 4,
+    }],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(1)}% win rate` } },
+    },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+      y: {
+        min: 0, max: 100,
+        grid: { color: '#1e293b' },
+        ticks: { color: '#94a3b8', callback: v => v + '%' },
+      },
+    },
+  },
+});
+
+
+
+// Label Performance Chart
+new Chart(document.getElementById('labelChart'), {
+  type: 'bar',
+  data: {
+    labels: ["STRONG VALUE", "VALUE", "MARGINAL"],
+    datasets: [
+      {
+        label: 'Win Rate %',
+        data: [0, 0, 0],
+        backgroundColor: 'rgba(56,189,248,0.7)',
+        borderRadius: 4,
+        yAxisID: 'y',
+      },
+      {
+        label: 'ROI %',
+        data: [0, 0, 0],
+        backgroundColor: ["rgba(74,222,128,0.7)", "rgba(74,222,128,0.7)", "rgba(74,222,128,0.7)"],
+        borderRadius: 4,
+        yAxisID: 'y2',
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.datasetIndex === 0
+            ? ` Win rate: ${ctx.parsed.y.toFixed(1)}%`
+            : ` ROI: ${ctx.parsed.y > 0 ? '+' : ''}${ctx.parsed.y.toFixed(1)}%`
+        }
+      },
+    },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+      y: {
+        type: 'linear', position: 'left',
+        min: 0, max: 100,
+        grid: { color: '#1e293b' },
+        ticks: { color: '#38bdf8', callback: v => v + '%' },
+      },
+      y2: {
+        type: 'linear', position: 'right',
+        grid: { drawOnChartArea: false },
+        ticks: { color: '#a78bfa', callback: v => (v >= 0 ? '+' : '') + v + '%' },
+      },
+    },
+  },
+});
+
+
+
+
+</script>
+</body>
+</html>

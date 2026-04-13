@@ -10,15 +10,10 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repo
@@ -47,15 +42,3 @@ jobs:
           git add tipsheet_output.html history_db.json dashboard.html
           git diff --staged --quiet || git commit -m "chore: regenerate NRL tip sheet $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload tipsheet as Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4

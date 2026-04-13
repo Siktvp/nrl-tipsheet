@@ -538,7 +538,9 @@ def model_h2h_prob(home_team, away_team, team_stats, team_form=None):
     total = home_strength + away_strength
     if total == 0:
         return 0.5
-    return min(max(round(home_strength / total, 4), 0.05), 0.95)
+    # Cap at 0.82 — no team is a reliable 95% chance in NRL, and inflated
+    # success rates are misleading when displayed to the user.
+    return min(max(round(home_strength / total, 4), 0.05), 0.82)
 
 
 def model_spread_prob(home_team, away_team, spread_point, team_stats, team_form=None):
@@ -1214,6 +1216,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- 13+ MARGIN ALERT — shown at top of card so it's not missed -->
+    {% if game.big_win_alert %}
+    <div style="background:#1c1a10;border:1px solid #b45309;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="background:#78350f;color:#fcd34d;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:4px;">13+ MARGIN ALERT</span>
+      <span style="font-size:0.85rem;"><strong>{{ game.big_win_alert.team }}</strong> are priced at <strong>{{ "%+.1f" | format(game.big_win_alert.line) }}</strong> — big line game. Check the <em>winning margin 13+</em> market on Sportsbet/TAB. May pay better than H2H if you expect a blowout.</span>
+    </div>
+    {% endif %}
+
     <!-- H2H -->
     {% if game.h2h_bets %}
     <h3>Head-to-Head</h3>
@@ -1305,14 +1315,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </tr>
       {% endfor %}
     </table>
-    {% endif %}
-
-    <!-- 13+ MARGIN ALERT -->
-    {% if game.big_win_alert %}
-    <div style="background:#1c1a10;border:1px solid #b45309;border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="background:#78350f;color:#fcd34d;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:4px;">13+ MARGIN ALERT</span>
-      <span style="font-size:0.85rem;"><strong>{{ game.big_win_alert.team }}</strong> are priced at <strong>{{ "%+.1f" | format(game.big_win_alert.line) }}</strong> — big line game. Check the <em>winning margin 13+</em> market on Sportsbet/TAB. May pay better than H2H if you expect a blowout.</span>
-    </div>
     {% endif %}
 
     <!-- BEST BET -->

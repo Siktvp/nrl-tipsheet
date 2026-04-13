@@ -522,9 +522,18 @@ def model_h2h_prob(home_team, away_team, team_stats, team_form=None):
     home_recent = home_form.get("recent_form_rating", home_base)
     away_recent = away_form.get("recent_form_rating", away_base)
 
-    # Blend: 50% location record, 50% recent form
-    home_strength = 0.5 * home_base + 0.5 * home_recent
-    away_strength = 0.5 * away_base + 0.5 * away_recent
+    # Mean-reversion: if a team's season quality is significantly better than recent form,
+    # the market tends to over-penalise them. Shift weight back toward season stats
+    # proportionally to the slump — up to 20% extra weighting on the season baseline.
+    def _blended_strength(season_base, recent):
+        slump = max(0.0, season_base - recent)
+        extra_season_w = min(0.20, slump * 0.6)
+        s_w = 0.5 + extra_season_w
+        r_w = 0.5 - extra_season_w
+        return s_w * season_base + r_w * recent
+
+    home_strength = _blended_strength(home_base, home_recent)
+    away_strength = _blended_strength(away_base, away_recent)
 
     total = home_strength + away_strength
     if total == 0:
@@ -563,7 +572,42 @@ def model_spread_prob(home_team, away_team, spread_point, team_stats, team_form=
     std_dev = 14.0
     z = (expected_margin - (-spread_point)) / std_dev
     prob = 0.5 * (1 + math.erf(z / math.sqrt(2)))
-    return round(min(max(prob, 0.05), 0.95), 4)
+
+    # Larger handicaps are harder to cover reliably — discount confidence as spread grows.
+    # For every point beyond 6.0, reduce the max confidence by 1.2%.
+    # e.g. -6.5 → max ~74.3%, -12.5 → max ~67.1%, -16.5 → max ~62.7%
+    spread_size = abs(spread_point)
+    spread_discount = max(0.0, (spread_size - 6.0) * 0.012)
+    max_conf = max(0.62, 0.75 - spread_discount)
+    return round(min(max(prob, 0.05), max_conf), 4)
+
+
+def model_expected_margin(home_team, away_team, team_stats, team_form=None):
+    """
+    Returns the model's expected points margin from the home team's perspective.
+    Positive = home team expected to win; negative = away team expected to win.
+    Used to flag '13+ margin' games where a winning margin market may offer better value.
+    """
+    team_form = team_form or {}
+    home_key = _team_key(home_team, team_stats)
+    away_key = _team_key(away_team, team_stats)
+    home_ts = team_stats.get(home_key, {})
+    away_ts = team_stats.get(away_key, {})
+    home_form = team_form.get(home_key, {})
+    away_form = team_form.get(away_key, {})
+
+    home_season = home_ts.get("avg_margin", 0)
+    away_season = away_ts.get("avg_margin", 0)
+    home_recent = home_form.get("recent_avg_margin", home_season)
+    away_recent = away_form.get("recent_avg_margin", away_season)
+
+    home_eff = 0.6 * home_season + 0.4 * home_recent
+    away_eff = 0.6 * away_season + 0.4 * away_recent
+    home_advantage = home_form.get("home_margin_advantage", 3.0)
+    # Scale by 0.5 to avoid double-counting each team's margin stats — the raw
+    # difference over-estimates by roughly 2x since both sides' avg_margin already
+    # reflects opponent quality. Result is a realistic expected points margin.
+    return round((home_eff - away_eff) * 0.5 + home_advantage, 1)
 
 
 def model_ats_prob(player):
@@ -622,6 +666,23 @@ def analyse_game(game, team_stats, team_form, all_player_stats):
     home = game["home_team"]
     away = game["away_team"]
 
+    # Expected margin: positive = home favoured, negative = away favoured
+    exp_margin = model_expected_margin(home, away, team_stats, team_form)
+
+    # 13+ Margin Alert: fire only when the bookmaker has set a line of -12.5 or bigger.
+    # This uses the bookie spread (reliable) rather than the model's margin estimate
+    # (which over-estimates due to avg_margin double-counting).
+    big_win_alert = None
+    for team, info in game.get("spreads", {}).items():
+        point = info.get("point", 0)
+        if point <= -12.5:  # team is favoured by 12.5+ pts — genuine blowout game
+            big_win_alert = {
+                "team": team,
+                "margin": abs(point),
+                "line": point,
+            }
+            break
+
     result = {
         "home_team": home,
         "away_team": away,
@@ -632,6 +693,8 @@ def analyse_game(game, team_stats, team_form, all_player_stats):
         "fts_picks": [],
         "best_bet": None,
         "all_value_bets": [],
+        "big_win_alert": big_win_alert,
+        "exp_margin": exp_margin,
     }
 
     # --- H2H ---
@@ -656,6 +719,7 @@ def analyse_game(game, team_stats, team_form, all_player_stats):
             "value_score": value_score(edge, mp) if edge > 0 else 0,
             "bet_type": "H2H",
             "description": f"{team} to win",
+            "longshot": odds >= 3.5,
         }
         result["h2h_bets"].append(bet)
         if edge > 0:
@@ -761,9 +825,10 @@ def analyse_game(game, team_stats, team_form, all_player_stats):
     result["ats_picks"] = sorted(result["ats_picks"], key=lambda x: x["edge"], reverse=True)[:5]
     result["fts_picks"] = sorted(result["fts_picks"], key=lambda x: x["edge"], reverse=True)[:5]
 
-    # Best bet this game = highest value_score across all value bets
+    # Best bet this game = highest expected return across all value bets.
+    # This prioritises dollar return over pure edge %, so big-odds value bets surface.
     if result["all_value_bets"]:
-        result["best_bet"] = max(result["all_value_bets"], key=lambda x: x["value_score"])
+        result["best_bet"] = max(result["all_value_bets"], key=lambda x: x["exp_return"])
 
     return result
 
@@ -774,20 +839,35 @@ def analyse_game(game, team_stats, team_form, all_player_stats):
 
 def build_round_summary(games_analysis):
     all_bets = []
+    all_h2h = []
     for g in games_analysis:
         for bet in g["all_value_bets"]:
             bet["game_label"] = f"{g['home_team']} vs {g['away_team']}"
             all_bets.append(bet)
+        for bet in g["h2h_bets"]:
+            bet["game_label"] = f"{g['home_team']} vs {g['away_team']}"
+            all_h2h.append(bet)
 
-    best_win_rate = sorted(all_bets, key=lambda x: x["model_prob"], reverse=True)[:5]
-    best_value = sorted(all_bets, key=lambda x: x["edge"], reverse=True)[:5]
+    # Primary: best expected dollar return (maximises return, surfaces longshots)
     best_return = sorted(all_bets, key=lambda x: x["exp_return"], reverse=True)[:5]
+    # Secondary: best edge % (most mispriced by bookie)
+    best_value = sorted(all_bets, key=lambda x: x["edge"], reverse=True)[:5]
+    # Safety: highest model probability (most likely to win, for conservative bettors)
+    best_win_rate = sorted(all_bets, key=lambda x: x["model_prob"], reverse=True)[:5]
+
+    # Longshot Watch — H2H underdogs at $3.50+ with positive edge, ranked by expected return
+    longshot_watch = [
+        b for b in all_h2h
+        if b.get("longshot") and b["edge"] > 0
+    ]
+    longshot_watch = sorted(longshot_watch, key=lambda x: x["exp_return"], reverse=True)[:5]
 
     return {
         "best_win_rate": best_win_rate,
         "best_value": best_value,
         "best_return": best_return,
         "all_bets": all_bets,
+        "longshot_watch": longshot_watch,
     }
 
 
@@ -941,6 +1021,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .badge-value { background: #052e16; color: #86efac; }
   .badge-marginal { background: #451a03; color: #fbbf24; }
 
+  .longshot-card { background: linear-gradient(135deg, #1c1a2e, #1e293b); border: 1px solid #7c3aed; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .longshot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .longshot-title { font-weight: 700; font-size: 0.95rem; color: #a78bfa; }
+  .longshot-badge { background: #4c1d95; color: #c4b5fd; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .longshot-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #2d2a4a; font-size: 0.82rem; }
+  .longshot-row:last-child { border-bottom: none; }
+  .longshot-team { flex: 1; font-weight: 600; }
+  .longshot-game { color: var(--muted); font-size: 0.74rem; }
+  .longshot-odds { color: #a78bfa; font-weight: 700; font-size: 1rem; min-width: 50px; text-align: right; }
+  .longshot-meta { display: flex; gap: 12px; font-size: 0.76rem; color: var(--muted); margin-top: 2px; flex-wrap: wrap; }
+  .longshot-edge { color: #86efac; font-weight: 600; }
+
   @media (max-width: 600px) {
     .multi-stats { gap: 10px; }
     table { font-size: 0.76rem; }
@@ -979,7 +1071,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <tr><td>Try Rate / game</td><td>How many tries this player scores per game on average this season. e.g. 0.62 = scores a try in ~62% of games.</td></tr>
       <tr><td>ATS — Anytime Try Scorer</td><td>Bet wins if the player scores a try at any point in the match.</td></tr>
       <tr><td>FTS — First Try Scorer</td><td>Bet wins only if the player scores the <strong>very first try</strong> of the match. Higher odds, lower probability — FTS model weights towards positions that typically score first (Fullbacks, Wingers).</td></tr>
-      <tr><td>Line / Handicap</td><td>A points head start or deficit. e.g. Brisbane -7.5 = Brisbane must win by 8+ points. +7.5 = team can lose by up to 7 and still win the bet.</td></tr>
+      <tr><td>Line / Handicap</td><td>A points head start or deficit. e.g. Brisbane -7.5 = Brisbane must win by 8+ points. +7.5 = team can lose by up to 7 and still win the bet. <strong>Note:</strong> Model confidence is capped lower for large spreads (e.g. -16.5) — covering a big handicap is much harder than a small one.</td></tr>
+      <tr><td>Longshot Watch</td><td>H2H underdogs paying $4.00 or more where the model detects positive edge. Bookmakers may be underpricing the underdog. High risk — review the game context carefully before backing.</td></tr>
       <tr><td>Safety Multi</td><td>Legs chosen for highest win probability. More likely to land — lower combined odds.</td></tr>
       <tr><td>Value Multi</td><td>Legs chosen for highest edge — where bookies look most wrong. Higher odds but less likely to all land.</td></tr>
       <tr><td>Best of Week Multi</td><td>Top recommended pick from each game combined. Balances edge and probability.</td></tr>
@@ -995,18 +1088,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="summary-grid">
 
     <div class="card summary-section">
-      <h3>Best Win Rate (Safest)</h3>
-      {% for bet in summary.best_win_rate %}
+      <h3>Best Expected Return / $10 ★</h3>
+      <p style="color:var(--muted);font-size:0.74rem;margin-bottom:6px;">Ranked by dollar return — surfaces value underdogs, not just safe bets.</p>
+      {% for bet in summary.best_return %}
       <div class="summary-row">
         <span class="summary-label">{{ bet.description }}<br><small style="color:#64748b">{{ bet.game_label }}</small></span>
         <span class="summary-odds">${{ bet.odds }}</span>
-        <span class="summary-edge value-ok">{{ (bet.model_prob * 100) | round | int }}%</span>
+        <span class="summary-edge value-strong">${{ bet.exp_return }}</span>
       </div>
       {% endfor %}
     </div>
 
     <div class="card summary-section">
       <h3>Best Value (Most Mispriced)</h3>
+      <p style="color:var(--muted);font-size:0.74rem;margin-bottom:6px;">Biggest gap between model and bookie — where the market looks most wrong.</p>
       {% for bet in summary.best_value %}
       <div class="summary-row">
         <span class="summary-label">{{ bet.description }}<br><small style="color:#64748b">{{ bet.game_label }}</small></span>
@@ -1017,17 +1112,47 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="card summary-section">
-      <h3>Best Expected Return / $10</h3>
-      {% for bet in summary.best_return %}
+      <h3>Safest Bets (Highest Win %)</h3>
+      <p style="color:var(--muted);font-size:0.74rem;margin-bottom:6px;">Most likely to win — conservative multi legs.</p>
+      {% for bet in summary.best_win_rate %}
       <div class="summary-row">
         <span class="summary-label">{{ bet.description }}<br><small style="color:#64748b">{{ bet.game_label }}</small></span>
         <span class="summary-odds">${{ bet.odds }}</span>
-        <span class="summary-edge value-strong">${{ bet.exp_return }}</span>
+        <span class="summary-edge value-ok">{{ (bet.model_prob * 100) | round | int }}%</span>
       </div>
       {% endfor %}
     </div>
 
   </div>
+
+  <!-- LONGSHOT WATCH -->
+  {% if summary.longshot_watch %}
+  <h2>Longshot Watch — Value Underdogs ($3.50+)</h2>
+  <p style="color:var(--muted);font-size:0.82rem;margin-bottom:12px;">Big-odds H2H bets where the model detects positive edge. High risk, high reward — the bookie may be underestimating the underdog. Review alongside the game analysis before betting.</p>
+  {% for bet in summary.longshot_watch %}
+  <div class="longshot-card">
+    <div class="longshot-header">
+      <span class="longshot-badge">LONGSHOT</span>
+      <span class="longshot-title">{{ bet.team }} to win</span>
+    </div>
+    <div class="longshot-game" style="margin-bottom:8px;color:var(--muted)">{{ bet.game_label }}</div>
+    <div class="longshot-row">
+      <div>
+        <div style="font-weight:700;font-size:1.05rem;color:#a78bfa">${{ bet.odds }}</div>
+        <div class="longshot-meta">
+          <span>Model: {{ (bet.model_prob * 100) | round(1) }}%</span>
+          <span>Implied: {{ (bet.implied_prob * 100) | round(1) }}%</span>
+          <span class="longshot-edge">Edge: +{{ (bet.edge * 100) | round(1) }}%</span>
+          <span>Exp. return / $10: ${{ bet.exp_return }}</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        {% if bet.label %}<span class="label-badge badge-{% if bet.label == 'STRONG VALUE' %}strong{% elif bet.label == 'VALUE' %}value{% else %}marginal{% endif %}">{{ bet.label }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
 
   <!-- SUGGESTED MULTIS -->
   {% if multis %}
@@ -1180,6 +1305,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </tr>
       {% endfor %}
     </table>
+    {% endif %}
+
+    <!-- 13+ MARGIN ALERT -->
+    {% if game.big_win_alert %}
+    <div style="background:#1c1a10;border:1px solid #b45309;border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="background:#78350f;color:#fcd34d;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:4px;">13+ MARGIN ALERT</span>
+      <span style="font-size:0.85rem;"><strong>{{ game.big_win_alert.team }}</strong> are priced at <strong>{{ "%+.1f" | format(game.big_win_alert.line) }}</strong> — big line game. Check the <em>winning margin 13+</em> market on Sportsbet/TAB. May pay better than H2H if you expect a blowout.</span>
+    </div>
     {% endif %}
 
     <!-- BEST BET -->

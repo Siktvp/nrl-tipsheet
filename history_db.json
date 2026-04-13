@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 1,
     "created_at": "2026-03-23T22:00:00Z",
-    "last_updated": "2026-04-13T22:38:15Z"
+    "last_updated": "2026-04-13T22:44:50Z"
   },
   "rounds": [
     {
@@ -28,7 +28,7 @@
       "round_id": "2026-R27",
       "season": 2026,
       "round_number": 27,
-      "generated_at": "2026-04-13T22:38:15Z",
+      "generated_at": "2026-04-13T22:44:50Z",
       "bankroll_start": 110.0,
       "stake_per_game": 13.75,
       "strategy": "flat_compounding",
@@ -39,15 +39,15 @@
           "away_team": "Manly Warringah Sea Eagles",
           "kickoff": "2026-04-16T09:50:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
-            "team": "North Queensland Cowboys",
-            "description": "North Queensland Cowboys -4.5",
-            "odds": 1.89,
-            "model_prob": 0.6138,
-            "implied_prob": 0.5291,
-            "edge": 0.0847,
+            "bet_type": "H2H",
+            "team": "Manly Warringah Sea Eagles",
+            "description": "Manly Warringah Sea Eagles to win",
+            "odds": 2.45,
+            "model_prob": 0.481,
+            "implied_prob": 0.4082,
+            "edge": 0.0728,
             "label": "VALUE",
-            "value_score": 0.052
+            "value_score": 0.035
           },
           "h2h_bets": [
             {
@@ -55,24 +55,24 @@
               "team": "Manly Warringah Sea Eagles",
               "description": "Manly Warringah Sea Eagles to win",
               "odds": 2.45,
-              "model_prob": 0.4615,
+              "model_prob": 0.481,
               "implied_prob": 0.4082,
-              "edge": 0.0533,
+              "edge": 0.0728,
               "label": "VALUE",
-              "value_score": 0.0246,
-              "exp_return": 11.31
+              "value_score": 0.035,
+              "exp_return": 11.78
             },
             {
               "bet_type": "H2H",
               "team": "North Queensland Cowboys",
               "description": "North Queensland Cowboys to win",
               "odds": 1.5,
-              "model_prob": 0.5385,
+              "model_prob": 0.519,
               "implied_prob": 0.6667,
-              "edge": -0.1282,
+              "edge": -0.1477,
               "label": null,
               "value_score": 0,
-              "exp_return": 8.08
+              "exp_return": 7.79
             }
           ],
           "spread_bets": [
@@ -118,11 +118,11 @@
             "team": "Melbourne Storm",
             "description": "Melbourne Storm -1.5",
             "odds": 1.91,
-            "model_prob": 0.95,
+            "model_prob": 0.75,
             "implied_prob": 0.5236,
-            "edge": 0.4264,
+            "edge": 0.2264,
             "label": "STRONG VALUE",
-            "value_score": 0.4051
+            "value_score": 0.1698
           },
           "h2h_bets": [
             {
@@ -168,12 +168,12 @@
               "team": "Melbourne Storm",
               "description": "Melbourne Storm -1.5",
               "odds": 1.91,
-              "model_prob": 0.95,
+              "model_prob": 0.75,
               "implied_prob": 0.5236,
-              "edge": 0.4264,
+              "edge": 0.2264,
               "label": "STRONG VALUE",
-              "value_score": 0.4051,
-              "exp_return": 18.14
+              "value_score": 0.1698,
+              "exp_return": 14.32
             }
           ],
           "ats_picks": [],
@@ -189,28 +189,28 @@
           "away_team": "Penrith Panthers",
           "kickoff": "2026-04-17T10:00:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
-            "team": "Penrith Panthers",
-            "description": "Penrith Panthers -14.5",
-            "odds": 1.88,
-            "model_prob": 0.95,
-            "implied_prob": 0.5319,
-            "edge": 0.4181,
+            "bet_type": "H2H",
+            "team": "Dolphins",
+            "description": "Dolphins to win",
+            "odds": 4.19,
+            "model_prob": 0.3582,
+            "implied_prob": 0.2387,
+            "edge": 0.1195,
             "label": "STRONG VALUE",
-            "value_score": 0.3972
+            "value_score": 0.0428
           },
           "h2h_bets": [
             {
               "bet_type": "H2H",
               "team": "Dolphins",
               "description": "Dolphins to win",
-              "odds": 4.21,
+              "odds": 4.19,
               "model_prob": 0.3582,
-              "implied_prob": 0.2375,
-              "edge": 0.1207,
+              "implied_prob": 0.2387,
+              "edge": 0.1195,
               "label": "STRONG VALUE",
-              "value_score": 0.0432,
-              "exp_return": 15.08
+              "value_score": 0.0428,
+              "exp_return": 15.01
             },
             {
               "bet_type": "H2H",
@@ -243,12 +243,12 @@
               "team": "Penrith Panthers",
               "description": "Penrith Panthers -14.5",
               "odds": 1.88,
-              "model_prob": 0.95,
+              "model_prob": 0.648,
               "implied_prob": 0.5319,
-              "edge": 0.4181,
+              "edge": 0.1161,
               "label": "STRONG VALUE",
-              "value_score": 0.3972,
-              "exp_return": 17.86
+              "value_score": 0.0752,
+              "exp_return": 12.18
             }
           ],
           "ats_picks": [],
@@ -268,11 +268,11 @@
             "team": "New Zealand Warriors",
             "description": "New Zealand Warriors -11.5",
             "odds": 1.89,
-            "model_prob": 0.95,
+            "model_prob": 0.684,
             "implied_prob": 0.5291,
-            "edge": 0.4209,
+            "edge": 0.1549,
             "label": "STRONG VALUE",
-            "value_score": 0.3999
+            "value_score": 0.106
           },
           "h2h_bets": [
             {
@@ -280,24 +280,24 @@
               "team": "Gold Coast Titans",
               "description": "Gold Coast Titans to win",
               "odds": 3.59,
-              "model_prob": 0.2072,
+              "model_prob": 0.2141,
               "implied_prob": 0.2786,
-              "edge": -0.0714,
+              "edge": -0.0645,
               "label": null,
               "value_score": 0,
-              "exp_return": 7.44
+              "exp_return": 7.69
             },
             {
               "bet_type": "H2H",
               "team": "New Zealand Warriors",
               "description": "New Zealand Warriors to win",
               "odds": 1.3,
-              "model_prob": 0.7928,
+              "model_prob": 0.7859,
               "implied_prob": 0.7692,
-              "edge": 0.0236,
+              "edge": 0.0167,
               "label": "MARGINAL",
-              "value_score": 0.0187,
-              "exp_return": 10.31
+              "value_score": 0.0131,
+              "exp_return": 10.22
             }
           ],
           "spread_bets": [
@@ -318,12 +318,12 @@
               "team": "New Zealand Warriors",
               "description": "New Zealand Warriors -11.5",
               "odds": 1.89,
-              "model_prob": 0.95,
+              "model_prob": 0.684,
               "implied_prob": 0.5291,
-              "edge": 0.4209,
+              "edge": 0.1549,
               "label": "STRONG VALUE",
-              "value_score": 0.3999,
-              "exp_return": 17.95
+              "value_score": 0.106,
+              "exp_return": 12.93
             }
           ],
           "ats_picks": [],
@@ -339,15 +339,15 @@
           "away_team": "St George Illawarra Dragons",
           "kickoff": "2026-04-18T07:30:00Z",
           "recommended_bet": {
-            "bet_type": "H2H",
+            "bet_type": "Line",
             "team": "South Sydney Rabbitohs",
-            "description": "South Sydney Rabbitohs to win",
-            "odds": 1.22,
-            "model_prob": 0.95,
-            "implied_prob": 0.8197,
-            "edge": 0.1303,
+            "description": "South Sydney Rabbitohs -13.5",
+            "odds": 1.9,
+            "model_prob": 0.6539,
+            "implied_prob": 0.5263,
+            "edge": 0.1276,
             "label": "STRONG VALUE",
-            "value_score": 0.1238
+            "value_score": 0.0834
           },
           "h2h_bets": [
             {
@@ -418,11 +418,11 @@
             "team": "Wests Tigers",
             "description": "Wests Tigers -6.5",
             "odds": 1.89,
-            "model_prob": 0.95,
+            "model_prob": 0.744,
             "implied_prob": 0.5291,
-            "edge": 0.4209,
+            "edge": 0.2149,
             "label": "STRONG VALUE",
-            "value_score": 0.3999
+            "value_score": 0.1599
           },
           "h2h_bets": [
             {
@@ -430,24 +430,24 @@
               "team": "Brisbane Broncos",
               "description": "Brisbane Broncos to win",
               "odds": 2.49,
-              "model_prob": 0.48,
+              "model_prob": 0.4918,
               "implied_prob": 0.4016,
-              "edge": 0.0784,
+              "edge": 0.0902,
               "label": "VALUE",
-              "value_score": 0.0376,
-              "exp_return": 11.95
+              "value_score": 0.0444,
+              "exp_return": 12.25
             },
             {
               "bet_type": "H2H",
               "team": "Wests Tigers",
               "description": "Wests Tigers to win",
               "odds": 1.52,
-              "model_prob": 0.52,
+              "model_prob": 0.5082,
               "implied_prob": 0.6579,
-              "edge": -0.1379,
+              "edge": -0.1497,
               "label": null,
               "value_score": 0,
-              "exp_return": 7.9
+              "exp_return": 7.72
             }
           ],
           "spread_bets": [
@@ -468,12 +468,12 @@
               "team": "Wests Tigers",
               "description": "Wests Tigers -6.5",
               "odds": 1.89,
-              "model_prob": 0.95,
+              "model_prob": 0.744,
               "implied_prob": 0.5291,
-              "edge": 0.4209,
+              "edge": 0.2149,
               "label": "STRONG VALUE",
-              "value_score": 0.3999,
-              "exp_return": 17.95
+              "value_score": 0.1599,
+              "exp_return": 14.06
             }
           ],
           "ats_picks": [],
@@ -489,15 +489,15 @@
           "away_team": "Newcastle Knights",
           "kickoff": "2026-04-19T04:00:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
+            "bet_type": "H2H",
             "team": "Newcastle Knights",
-            "description": "Newcastle Knights +10.5",
-            "odds": 1.88,
-            "model_prob": 0.9431,
-            "implied_prob": 0.5319,
-            "edge": 0.4112,
+            "description": "Newcastle Knights to win",
+            "odds": 3.29,
+            "model_prob": 0.6024,
+            "implied_prob": 0.304,
+            "edge": 0.2984,
             "label": "STRONG VALUE",
-            "value_score": 0.3878
+            "value_score": 0.1798
           },
           "h2h_bets": [
             {
@@ -505,24 +505,24 @@
               "team": "Newcastle Knights",
               "description": "Newcastle Knights to win",
               "odds": 3.29,
-              "model_prob": 0.6027,
+              "model_prob": 0.6024,
               "implied_prob": 0.304,
-              "edge": 0.2987,
+              "edge": 0.2984,
               "label": "STRONG VALUE",
-              "value_score": 0.18,
-              "exp_return": 19.83
+              "value_score": 0.1798,
+              "exp_return": 19.82
             },
             {
               "bet_type": "H2H",
               "team": "Sydney Roosters",
               "description": "Sydney Roosters to win",
               "odds": 1.3,
-              "model_prob": 0.3973,
+              "model_prob": 0.3976,
               "implied_prob": 0.7692,
-              "edge": -0.3719,
+              "edge": -0.3716,
               "label": null,
               "value_score": 0,
-              "exp_return": 5.16
+              "exp_return": 5.17
             }
           ],
           "spread_bets": [
@@ -531,12 +531,12 @@
               "team": "Newcastle Knights",
               "description": "Newcastle Knights +10.5",
               "odds": 1.88,
-              "model_prob": 0.9431,
+              "model_prob": 0.696,
               "implied_prob": 0.5319,
-              "edge": 0.4112,
+              "edge": 0.1641,
               "label": "STRONG VALUE",
-              "value_score": 0.3878,
-              "exp_return": 17.73
+              "value_score": 0.1142,
+              "exp_return": 13.08
             },
             {
               "bet_type": "Line",
@@ -564,15 +564,15 @@
           "away_team": "Canterbury Bulldogs",
           "kickoff": "2026-04-19T06:05:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
-            "team": "Canterbury Bulldogs",
-            "description": "Canterbury Bulldogs -10.5",
-            "odds": 1.87,
-            "model_prob": 0.7516,
-            "implied_prob": 0.5348,
-            "edge": 0.2168,
+            "bet_type": "H2H",
+            "team": "Parramatta Eels",
+            "description": "Parramatta Eels to win",
+            "odds": 3.35,
+            "model_prob": 0.4068,
+            "implied_prob": 0.2985,
+            "edge": 0.1083,
             "label": "STRONG VALUE",
-            "value_score": 0.1629
+            "value_score": 0.0441
           },
           "h2h_bets": [
             {
@@ -606,12 +606,12 @@
               "team": "Canterbury Bulldogs",
               "description": "Canterbury Bulldogs -10.5",
               "odds": 1.87,
-              "model_prob": 0.7516,
+              "model_prob": 0.696,
               "implied_prob": 0.5348,
-              "edge": 0.2168,
+              "edge": 0.1612,
               "label": "STRONG VALUE",
-              "value_score": 0.1629,
-              "exp_return": 14.05
+              "value_score": 0.1122,
+              "exp_return": 13.02
             },
             {
               "bet_type": "Line",

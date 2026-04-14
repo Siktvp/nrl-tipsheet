@@ -239,6 +239,83 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
   </div>
   {% endif %}
 
+  <!-- This Week's Picks -->
+  {% if current_picks %}
+  <h2>{{ current_picks.round_id }} — Picks & Results</h2>
+  {% if not current_picks.resolved %}
+  <p style="color:var(--muted);font-size:0.82rem;margin-bottom:12px;">Results pending — enter them via GitHub Actions → "Record Round Results" to update the dashboard.</p>
+  {% else %}
+  <div class="kpi-grid" style="margin-bottom:16px;">
+    <div class="kpi-card">
+      <div class="kpi-value {% if current_picks.flat_profit > 0 %}positive{% elif current_picks.flat_profit < 0 %}negative{% else %}neutral{% endif %}">
+        {{ "%+.2f" | format(current_picks.flat_profit) if current_picks.flat_profit is not none else "—" }}
+      </div>
+      <div class="kpi-label">Flat $10/game Net</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value {% if current_picks.flat_roi > 0 %}positive{% elif current_picks.flat_roi < 0 %}negative{% else %}neutral{% endif %}">
+        {{ "%+.1f" | format(current_picks.flat_roi) }}% if current_picks.flat_roi is not none else "—"
+      </div>
+      <div class="kpi-label">Flat $10 ROI</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">${{ "%.2f" | format(current_picks.flat_staked) }}</div>
+      <div class="kpi-label">Total Staked ($10×{{ current_picks.bets }})</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value {% if current_picks.flat_returned >= current_picks.flat_staked %}positive{% else %}negative{% endif %}">
+        ${{ "%.2f" | format(current_picks.flat_returned) }}
+      </div>
+      <div class="kpi-label">Total Returned</div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table>
+      <thead>
+        <tr>
+          <th>Game</th>
+          <th>Recommendation</th>
+          <th>Odds</th>
+          <th>Label</th>
+          <th>Result</th>
+          <th>$10 Return</th>
+          <th>Profit</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in current_picks.game_rows %}
+        <tr>
+          <td style="white-space:nowrap"><strong>{{ g.home_team }}</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs {{ g.away_team }}</span></td>
+          <td>{{ g.description }}</td>
+          <td>${{ g.odds }}</td>
+          <td>
+            {% if g.label %}
+            <span class="badge badge-{% if g.label == 'STRONG VALUE' %}win{% elif g.label == 'VALUE' %}recommended{% else %}pending{% endif %}">{{ g.label }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if g.pending %}
+            <span class="badge badge-pending">PENDING</span>
+            {% elif g.won %}
+            <span class="badge badge-win">WIN</span>
+            {% else %}
+            <span class="badge badge-loss">LOSS</span>
+            {% endif %}
+          </td>
+          <td class="{% if g.flat_return is not none %}{% if g.flat_return > 0 %}positive{% else %}negative{% endif %}{% endif %}">
+            {% if g.flat_return is not none %}${{ "%.2f" | format(g.flat_return) }}{% else %}—{% endif %}
+          </td>
+          <td class="{% if g.flat_profit is not none %}{% if g.flat_profit >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
+            {% if g.flat_profit is not none %}{{ "%+.2f" | format(g.flat_profit) }}{% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   <!-- Round-by-Round Table -->
   <h2>Round History</h2>
   <div class="card">
@@ -247,12 +324,11 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
       <thead>
         <tr>
           <th>Round</th>
-          <th>Bets</th>
           <th>W / L</th>
-          <th>Staked</th>
-          <th>Returned</th>
-          <th>Profit</th>
-          <th>ROI</th>
+          <th>Flat $10 Staked</th>
+          <th>Flat $10 Returned</th>
+          <th>Flat $10 Profit</th>
+          <th>Flat $10 ROI</th>
           <th>Bankroll</th>
         </tr>
       </thead>
@@ -260,7 +336,6 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
         {% for row in round_rows %}
         <tr>
           <td><strong>{{ row.round_id }}</strong></td>
-          <td>{{ row.bets }}</td>
           <td>
             {% if row.resolved %}
             <span class="positive">{{ row.wins }}W</span> / <span class="negative">{{ row.losses }}L</span>
@@ -268,18 +343,56 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
             <span class="badge badge-pending">PENDING</span>
             {% endif %}
           </td>
-          <td>{% if row.resolved %}${{ "%.2f" | format(row.staked) }}{% else %}—{% endif %}</td>
-          <td>{% if row.resolved %}${{ "%.2f" | format(row.returned) }}{% else %}—{% endif %}</td>
-          <td class="{% if row.resolved %}{% if row.profit >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
-            {% if row.resolved %}{{ "%+.2f" | format(row.profit) }}{% else %}—{% endif %}
+          <td>{% if row.flat_staked %}${{ "%.2f" | format(row.flat_staked) }}{% else %}—{% endif %}</td>
+          <td>{% if row.flat_returned is not none and row.resolved %}${{ "%.2f" | format(row.flat_returned) }}{% else %}—{% endif %}</td>
+          <td class="{% if row.flat_profit is not none and row.resolved %}{% if row.flat_profit >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
+            {% if row.flat_profit is not none and row.resolved %}{{ "%+.2f" | format(row.flat_profit) }}{% else %}—{% endif %}
           </td>
-          <td class="{% if row.resolved %}{% if row.roi_pct >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
-            {% if row.resolved %}{{ "%+.1f" | format(row.roi_pct) }}%{% else %}—{% endif %}
+          <td class="{% if row.flat_roi is not none and row.resolved %}{% if row.flat_roi >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
+            {% if row.flat_roi is not none and row.resolved %}{{ "%+.1f" | format(row.flat_roi) }}%{% else %}—{% endif %}
           </td>
           <td class="{% if row.bankroll_end %}{% if row.bankroll_end >= row.bankroll_start %}positive{% else %}negative{% endif %}{% endif %}">
             {% if row.bankroll_end %}${{ "%.2f" | format(row.bankroll_end) }}{% elif row.bankroll_start %}${{ "%.2f" | format(row.bankroll_start) }} →?{% else %}—{% endif %}
           </td>
         </tr>
+        {% if row.game_rows %}
+        <tr>
+          <td colspan="7" style="padding:0;background:#0f172a;">
+            <details style="padding:8px 12px;">
+              <summary style="cursor:pointer;color:var(--muted);font-size:0.78rem;list-style:none;display:flex;align-items:center;gap:6px;">
+                ▶ Show {{ row.game_rows | length }} game picks
+              </summary>
+              <table style="margin-top:8px;font-size:0.78rem;">
+                <thead>
+                  <tr>
+                    <th>Game</th><th>Recommendation</th><th>Odds</th><th>Result</th><th>$10 Return</th><th>Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for g in row.game_rows %}
+                  <tr>
+                    <td>{{ g.home_team }} vs {{ g.away_team }}</td>
+                    <td>{{ g.description }}</td>
+                    <td>${{ g.odds }}</td>
+                    <td>
+                      {% if g.pending %}<span class="badge badge-pending">PENDING</span>
+                      {% elif g.won %}<span class="badge badge-win">WIN</span>
+                      {% else %}<span class="badge badge-loss">LOSS</span>{% endif %}
+                    </td>
+                    <td class="{% if g.flat_return is not none %}{% if g.flat_return > 0 %}positive{% else %}negative{% endif %}{% endif %}">
+                      {% if g.flat_return is not none %}${{ "%.2f" | format(g.flat_return) }}{% else %}—{% endif %}
+                    </td>
+                    <td class="{% if g.flat_profit is not none %}{% if g.flat_profit >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
+                      {% if g.flat_profit is not none %}{{ "%+.2f" | format(g.flat_profit) }}{% else %}—{% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </details>
+          </td>
+        </tr>
+        {% endif %}
         {% endfor %}
       </tbody>
     </table>
@@ -580,7 +693,8 @@ def build_dashboard_data(db):
         else:
             cal_actual.append(None)
 
-    # Round history table
+    # Round history table + per-game detail
+    FLAT_STAKE = 10.0
     round_rows = []
     for rnd in reversed(sorted_rounds):
         rr = rnd.get("round_result", {})
@@ -599,6 +713,43 @@ def build_dashboard_data(db):
         bank_end = rr.get("bankroll_end")
         bank_start = rnd.get("bankroll_start")
 
+        # Flat $10 per game calculation
+        flat_staked = 0.0
+        flat_returned = 0.0
+        game_rows = []
+        for g in games:
+            rec = g.get("recommended_bet") or {}
+            odds = rec.get("odds") or 0
+            won = g.get("won")
+            result = g.get("result")
+            pending = won is None and result is None
+
+            if not pending and odds:
+                flat_staked += FLAT_STAKE
+                flat_ret = round(odds * FLAT_STAKE, 2) if won else 0.0
+                flat_returned += flat_ret
+            else:
+                flat_ret = None
+
+            game_rows.append({
+                "home_team": g.get("home_team", ""),
+                "away_team": g.get("away_team", ""),
+                "description": rec.get("description", "—"),
+                "bet_type": rec.get("bet_type", ""),
+                "odds": odds,
+                "label": rec.get("label", ""),
+                "model_prob": rec.get("model_prob"),
+                "edge": rec.get("edge"),
+                "won": won,
+                "pending": pending,
+                "flat_stake": FLAT_STAKE if not pending else None,
+                "flat_return": flat_ret,
+                "flat_profit": round(flat_ret - FLAT_STAKE, 2) if flat_ret is not None else None,
+            })
+
+        flat_profit = round(flat_returned - flat_staked, 2) if flat_staked else None
+        flat_roi = round(flat_profit / flat_staked * 100, 1) if flat_staked else None
+
         round_rows.append({
             "round_id": rnd["round_id"],
             "bets": n_games,
@@ -611,7 +762,15 @@ def build_dashboard_data(db):
             "bankroll_start": bank_start or 0,
             "bankroll_end": bank_end,
             "resolved": resolved,
+            "game_rows": game_rows,
+            "flat_staked": flat_staked,
+            "flat_returned": flat_returned,
+            "flat_profit": flat_profit,
+            "flat_roi": flat_roi,
         })
+
+    # Current round picks — most recent round (may be pending)
+    current_picks = round_rows[0] if round_rows else None
 
     # Current bankroll
     from nrl_tracker import get_current_bankroll
@@ -642,6 +801,7 @@ def build_dashboard_data(db):
             "has_data": has_calibration_data,
         },
         "round_rows": round_rows,
+        "current_picks": current_picks,
         "recommendations": recommendations,
         "generated_at": datetime.now().strftime("%d %b %Y %I:%M %p"),
     }

@@ -1,0 +1,14 @@
+{
+  "_instructions": "Add your actual bets here. Each entry in 'bets' is one punt. 'result' is 'WIN', 'LOSS', or 'PENDING'. 'stake' is dollars. 'odds' is decimal (e.g. 5.00 for $5). 'round_id' format is '2026-R07'.",
+  "bets": [
+    {
+      "round_id": "2026-R07",
+      "game": "Penrith Panthers vs Canterbury Bulldogs",
+      "description": "Canterbury Bulldogs to win",
+      "odds": 5.0,
+      "stake": 10.0,
+      "result": "WIN",
+      "notes": "Gut feel — Bulldogs were underrated"
+    }
+  ]
+}

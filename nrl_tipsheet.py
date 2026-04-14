@@ -13,7 +13,7 @@ import requests
 from datetime import datetime, timezone
 from jinja2 import Template
 from bs4 import BeautifulSoup
-from nrl_tracker import load_db, save_db, save_round_predictions, get_current_bankroll
+from nrl_tracker import load_db, save_db, save_round_predictions, get_current_bankroll, auto_resolve_from_scores
 
 # ---------------------------------------------------------------------------
 # Config — use environment variables (GitHub Actions) or fall back to config.py
@@ -1371,6 +1371,40 @@ def fmt_kickoff(iso_str):
 # Main
 # ---------------------------------------------------------------------------
 
+def fetch_completed_round_scores(round_number, season):
+    """
+    Fetch final scores for all completed games in a given NRL round.
+    Returns list of {home_team, away_team, home_score, away_score}.
+    """
+    scores = []
+    try:
+        data = nrl_get(
+            "https://www.nrl.com/draw/data",
+            {"competition": NRL_COMPETITION_ID, "season": season, "round": round_number},
+        )
+        for f in data.get("fixtures", []):
+            if f.get("matchState") not in ("FullTime", "Post", "Final"):
+                continue
+            home_obj = f.get("homeTeam", {})
+            away_obj = f.get("awayTeam", {})
+            home_nick = home_obj.get("nickName") or home_obj.get("teamNickname", "")
+            away_nick = away_obj.get("nickName") or away_obj.get("teamNickname", "")
+            home_score = (home_obj.get("score") or home_obj.get("teamScore")
+                          or f.get("homeScore") or f.get("homeTeamScore"))
+            away_score = (away_obj.get("score") or away_obj.get("teamScore")
+                          or f.get("awayScore") or f.get("awayTeamScore"))
+            if home_nick and away_nick and home_score is not None and away_score is not None:
+                scores.append({
+                    "home_team": home_nick,
+                    "away_team": away_nick,
+                    "home_score": int(home_score),
+                    "away_score": int(away_score),
+                })
+    except Exception as e:
+        print(f"  WARNING: Could not fetch scores for round {round_number}: {e}")
+    return scores
+
+
 def main():
     print("NRL Tip Sheet Generator")
     print("=" * 40)
@@ -1416,8 +1450,31 @@ def main():
     round_label = f"Round {round_number} — {datetime.now().strftime('%d %b %Y')}"
     generated_at = datetime.now().strftime("%d %b %Y %I:%M %p")
 
+    # Auto-resolve results for any previous rounds that have completed games
+    print("Auto-resolving previous round results from NRL.com...")
+    season = datetime.now().year
+    resolved_any = False
+    for rnd in db.get("rounds", []):
+        rr = rnd.get("round_result", {})
+        already_resolved = rr.get("resolved_at") is not None
+        if already_resolved:
+            continue
+        has_pending = any(g.get("won") is None for g in rnd.get("games", []) if g.get("recommended_bet"))
+        if not has_pending:
+            continue
+        prev_round_num = rnd.get("round_number")
+        if not prev_round_num or prev_round_num >= round_number:
+            continue
+        scores = fetch_completed_round_scores(prev_round_num, season)
+        if scores:
+            n = auto_resolve_from_scores(db, rnd["round_id"], scores)
+            if n:
+                resolved_any = True
+    if not resolved_any:
+        print("  No pending rounds to resolve.")
+
     print("Saving round predictions to history_db.json...")
-    save_round_predictions(db, datetime.now().year, round_number, games_analysis, bankroll)
+    save_round_predictions(db, season, round_number, games_analysis, bankroll)
     save_db(db)
 
     print("Rendering HTML...")

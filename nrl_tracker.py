@@ -171,6 +171,7 @@ def save_round_predictions(db, season, round_number, games_analysis, bankroll):
                 "edge": best.get("edge"),
                 "label": best.get("label"),
                 "value_score": best.get("value_score"),
+                "point": best.get("point"),  # spread point — needed for line bet resolution
             }
 
         # Store all recommended bets for strategy comparison
@@ -644,3 +645,134 @@ def get_filter_recommendations(db):
     # Sort by ROI descending
     recommendations.sort(key=lambda x: x["roi_pct"], reverse=True)
     return recommendations
+
+
+# ---------------------------------------------------------------------------
+# Auto-resolve results from NRL.com scores
+# ---------------------------------------------------------------------------
+
+def auto_resolve_from_scores(db, round_id, game_scores):
+    """
+    Automatically resolve recommended bets for a round using final scores from NRL.com.
+
+    game_scores: list of dicts with keys:
+        home_team (str), away_team (str), home_score (int), away_score (int)
+
+    Resolves:
+      - H2H bets: recommended team wins if they have the higher score
+      - Line bets: recommended team covers if their winning margin > abs(point)
+      - ATS/FTS: cannot be auto-resolved from final score alone — left as None
+
+    Returns number of games resolved.
+    """
+    target = None
+    for r in db["rounds"]:
+        if r["round_id"] == round_id:
+            target = r
+            break
+
+    if not target:
+        return 0
+
+    def _normalise(name):
+        return name.lower().strip()
+
+    def _teams_match(score_home, score_away, game_home, game_away):
+        """Fuzzy match: check any word overlap between team names."""
+        sh = _normalise(score_home)
+        sa = _normalise(score_away)
+        gh = _normalise(game_home)
+        ga = _normalise(game_away)
+        home_match = any(w in gh for w in sh.split()) or any(w in sh for w in gh.split())
+        away_match = any(w in ga for w in sa.split()) or any(w in sa for w in ga.split())
+        return home_match and away_match
+
+    resolved_count = 0
+    for game in target["games"]:
+        # Skip already-resolved games
+        if game.get("won") is not None:
+            continue
+
+        rec = game.get("recommended_bet")
+        if not rec:
+            continue
+
+        # Find matching score entry
+        score = None
+        game_home = game.get("home_team", "")
+        game_away = game.get("away_team", "")
+        for s in game_scores:
+            if _teams_match(s["home_team"], s["away_team"], game_home, game_away):
+                score = s
+                break
+
+        if not score:
+            continue
+
+        home_score = score["home_score"]
+        away_score = score["away_score"]
+        bet_type = rec.get("bet_type", "H2H")
+        bet_team = _normalise(rec.get("team", ""))
+
+        # Determine which side the recommended team is on
+        is_home_bet = any(w in _normalise(game_home) for w in bet_team.split()) or \
+                      any(w in bet_team for w in _normalise(game_home).split())
+
+        if bet_type == "H2H":
+            if is_home_bet:
+                won = home_score > away_score
+            else:
+                won = away_score > home_score
+            game["won"] = won
+            game["result"] = "WIN" if won else "LOSS"
+            game["payout"] = round(game["stake"] * rec["odds"], 2) if won else 0.0
+            resolved_count += 1
+
+        elif bet_type == "Line":
+            point = rec.get("point")
+            if point is None:
+                # Try parsing from description e.g. "Panthers -14.5"
+                desc = rec.get("description", "")
+                import re
+                m = re.search(r"([+-]?\d+\.?\d*)\s*$", desc)
+                point = float(m.group(1)) if m else None
+
+            if point is not None:
+                # Margin from the bet team's perspective
+                if is_home_bet:
+                    margin = home_score - away_score
+                else:
+                    margin = away_score - home_score
+                # Covered if their margin exceeds the absolute handicap
+                won = margin > abs(point)
+                game["won"] = won
+                game["result"] = "WIN" if won else "LOSS"
+                game["payout"] = round(game["stake"] * rec["odds"], 2) if won else 0.0
+                resolved_count += 1
+        # ATS/FTS — cannot resolve from score alone, leave as None
+
+    if resolved_count > 0:
+        # Recompute round aggregates
+        resolved_games = [g for g in target["games"] if g.get("won") is not None]
+        wins = sum(1 for g in resolved_games if g.get("won"))
+        losses = len(resolved_games) - wins
+        total_staked = round(sum(g["stake"] for g in resolved_games), 2)
+        total_returned = round(sum(g.get("payout") or 0 for g in resolved_games), 2)
+        net_profit = round(total_returned - total_staked, 2)
+        bankroll_start = target.get("bankroll_start", DEFAULT_BANKROLL)
+        all_resolved = all(g.get("result") is not None for g in target["games"])
+        bankroll_end = round(bankroll_start - total_staked + total_returned, 2) if all_resolved else None
+
+        target["round_result"] = {
+            "resolved_at": _now_iso(),
+            "wins": wins,
+            "losses": losses,
+            "total_staked": total_staked,
+            "total_returned": total_returned,
+            "net_profit": net_profit,
+            "bankroll_end": bankroll_end,
+        }
+        _recompute_lifetime(db)
+        print(f"  Auto-resolved {resolved_count} game(s) for {round_id}: {wins}W/{losses}L")
+
+    return resolved_count

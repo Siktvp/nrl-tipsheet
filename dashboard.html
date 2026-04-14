@@ -60,7 +60,7 @@
   <div class="header">
     <div>
       <h1>NRL Tracker Dashboard</h1>
-      <div class="generated">Generated 14 Apr 2026 10:45 AM</div>
+      <div class="generated">Generated 14 Apr 2026 03:25 PM</div>
     </div>
     <div class="header-links">
       <a href="tipsheet_output.html">Tipsheet</a>
@@ -70,35 +70,35 @@
   <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-value">1</div>
+      <div class="kpi-value">2</div>
       <div class="kpi-label">Rounds Tracked</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        75.0%
+        56.2%
       </div>
       <div class="kpi-label">Win Rate</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        +37.5%
+        +12.2%
       </div>
       <div class="kpi-label">Lifetime ROI</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        $110.00
+        $99.50
       </div>
       <div class="kpi-label">Current Bankroll</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        +30.00
+        +19.50
       </div>
       <div class="kpi-label">Net Profit ($)</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value neutral">8</div>
+      <div class="kpi-value neutral">16</div>
       <div class="kpi-label">Total Bets</div>
     </div>
   </div>
@@ -160,16 +160,50 @@
   <!-- Strategy Recommendations -->
   <h2>Strategy Filter Analysis</h2>
   
-  <div class="card empty-state">
-    <div class="empty-state-icon">💡</div>
-    <strong>Not enough data yet</strong>
-    <p>Filter recommendations appear after at least 10 bets per category are resolved.</p>
+  <div class="card">
+    <p style="color: var(--muted); font-size: 0.8rem; margin-bottom: 12px;">
+      Based on 16 resolved bets. Filters with fewer than 10 bets are excluded.
+      Use these to refine which bets to take — not financial advice.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Filter</th>
+          <th>Bets</th>
+          <th>Wins</th>
+          <th>Win Rate</th>
+          <th>ROI</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td><strong>All bets (current strategy)</strong></td>
+          <td>16</td>
+          <td>9</td>
+          <td class="positive">56.2%</td>
+          <td class="positive">+12.2%</td>
+          <td><span class="badge badge-baseline">Baseline</span></td>
+        </tr>
+        
+        <tr>
+          <td><strong>Line bets only</strong></td>
+          <td>11</td>
+          <td>6</td>
+          <td class="neutral">54.5%</td>
+          <td class="positive">+2.8%</td>
+          <td><span class="badge badge-caution">Caution</span></td>
+        </tr>
+        
+      </tbody>
+    </table>
   </div>
   
 
   <!-- This Week's Picks -->
   
-  <h2>2026-R27 — Picks & Results</h2>
+  <h2>2026-R07 — Picks & Results</h2>
   
   <p style="color:var(--muted);font-size:0.82rem;margin-bottom:12px;">Results pending — enter them via GitHub Actions → "Record Round Results" to update the dashboard.</p>
   
@@ -388,7 +422,7 @@
       <tbody>
         
         <tr>
-          <td><strong>2026-R27</strong></td>
+          <td><strong>2026-R07</strong></td>
           <td>
             
             <span class="badge badge-pending">PENDING</span>
@@ -403,7 +437,7 @@
             —
           </td>
           <td class="">
-            $110.00 →?
+            $99.50 →?
           </td>
         </tr>
         
@@ -557,22 +591,332 @@
         
         
         <tr>
-          <td><strong>2026-R07</strong></td>
+          <td><strong>2026-R06</strong></td>
+          <td>
+            
+            <span class="positive">3W</span> / <span class="negative">5L</span>
+            
+          </td>
+          <td>$80.00</td>
+          <td>$53.50</td>
+          <td class="negative">
+            -26.50
+          </td>
+          <td class="negative">
+            -33.1%
+          </td>
+          <td class="negative">
+            $99.50
+          </td>
+        </tr>
+        
+        <tr>
+          <td colspan="7" style="padding:0;background:#0f172a;">
+            <details style="padding:8px 12px;">
+              <summary style="cursor:pointer;color:var(--muted);font-size:0.78rem;list-style:none;display:flex;align-items:center;gap:6px;">
+                ▶ Show 8 game picks
+              </summary>
+              <table style="margin-top:8px;font-size:0.78rem;">
+                <thead>
+                  <tr>
+                    <th>Game</th><th>Recommendation</th><th>Odds</th><th>Result</th><th>$10 Return</th><th>Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                  <tr>
+                    <td>Canterbury Bulldogs vs Penrith Panthers</td>
+                    <td>Penrith Panthers -16.5</td>
+                    <td>$1.89</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>St George Illawarra Dragons vs Manly Warringah Sea Eagles</td>
+                    <td>Manly Warringah Sea Eagles to win</td>
+                    <td>$1.56</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $15.60
+                    </td>
+                    <td class="positive">
+                      +5.60
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Brisbane Broncos vs North Queensland Cowboys</td>
+                    <td>Brisbane Broncos to win</td>
+                    <td>$1.73</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>South Sydney Rabbitohs vs Canberra Raiders</td>
+                    <td>South Sydney Rabbitohs -6.5</td>
+                    <td>$1.89</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Cronulla Sutherland Sharks vs Sydney Roosters</td>
+                    <td>Cronulla Sutherland Sharks +0.5</td>
+                    <td>$1.9</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Melbourne Storm vs New Zealand Warriors</td>
+                    <td>New Zealand Warriors +6.5</td>
+                    <td>$1.89</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $18.90
+                    </td>
+                    <td class="positive">
+                      +8.90
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Parramatta Eels vs Gold Coast Titans</td>
+                    <td>Parramatta Eels to win</td>
+                    <td>$1.57</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Wests Tigers vs Newcastle Knights</td>
+                    <td>Wests Tigers -2.5</td>
+                    <td>$1.9</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $19.00
+                    </td>
+                    <td class="positive">
+                      +9.00
+                    </td>
+                  </tr>
+                  
+                </tbody>
+              </table>
+            </details>
+          </td>
+        </tr>
+        
+        
+        <tr>
+          <td><strong>2026-R05</strong></td>
           <td>
             
             <span class="positive">6W</span> / <span class="negative">2L</span>
             
           </td>
-          <td>—</td>
-          <td>$0.00</td>
-          <td class="">
-            —
-          </td>
-          <td class="">
-            —
+          <td>$80.00</td>
+          <td>$126.00</td>
+          <td class="positive">
+            +46.00
           </td>
           <td class="positive">
-            $110.00
+            +57.5%
+          </td>
+          <td class="positive">
+            $126.00
+          </td>
+        </tr>
+        
+        <tr>
+          <td colspan="7" style="padding:0;background:#0f172a;">
+            <details style="padding:8px 12px;">
+              <summary style="cursor:pointer;color:var(--muted);font-size:0.78rem;list-style:none;display:flex;align-items:center;gap:6px;">
+                ▶ Show 8 game picks
+              </summary>
+              <table style="margin-top:8px;font-size:0.78rem;">
+                <thead>
+                  <tr>
+                    <th>Game</th><th>Recommendation</th><th>Odds</th><th>Result</th><th>$10 Return</th><th>Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                  <tr>
+                    <td>Dolphins vs Manly Warringah Sea Eagles</td>
+                    <td>Manly Warringah Sea Eagles to win</td>
+                    <td>$3.25</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $32.50
+                    </td>
+                    <td class="positive">
+                      +22.50
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>South Sydney Rabbitohs vs Canterbury Bulldogs</td>
+                    <td>South Sydney Rabbitohs +1.5</td>
+                    <td>$1.85</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $18.50
+                    </td>
+                    <td class="positive">
+                      +8.50
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Penrith Panthers vs Melbourne Storm</td>
+                    <td>Penrith Panthers -7.5</td>
+                    <td>$1.89</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $18.90
+                    </td>
+                    <td class="positive">
+                      +8.90
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>St George Illawarra Dragons vs North Queensland Cowboys</td>
+                    <td>North Queensland Cowboys to win</td>
+                    <td>$1.83</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $18.30
+                    </td>
+                    <td class="positive">
+                      +8.30
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Gold Coast Titans vs Brisbane Broncos</td>
+                    <td>Gold Coast Titans +13.5</td>
+                    <td>$1.93</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Cronulla Sutherland Sharks vs New Zealand Warriors</td>
+                    <td>New Zealand Warriors +3.5</td>
+                    <td>$1.91</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Newcastle Knights vs Canberra Raiders</td>
+                    <td>Newcastle Knights +3.5</td>
+                    <td>$1.9</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $19.00
+                    </td>
+                    <td class="positive">
+                      +9.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Parramatta Eels vs Wests Tigers</td>
+                    <td>Wests Tigers +3.5</td>
+                    <td>$1.88</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $18.80
+                    </td>
+                    <td class="positive">
+                      +8.80
+                    </td>
+                  </tr>
+                  
+                </tbody>
+              </table>
+            </details>
           </td>
         </tr>
         
@@ -601,11 +945,11 @@ Chart.defaults.borderColor = chartDefaults.borderColor;
 new Chart(document.getElementById('bankrollChart'), {
   type: 'line',
   data: {
-    labels: ["Start", "2026-R07"],
+    labels: ["Start", "2026-R05", "2026-R06"],
     datasets: [
       {
         label: 'Your Strategy (Compounding)',
-        data: [80.0, 110.0],
+        data: [80.0, 126.0, 84.26],
         borderColor: '#4ade80',
         backgroundColor: 'rgba(74,222,128,0.08)',
         tension: 0.3,
@@ -614,7 +958,7 @@ new Chart(document.getElementById('bankrollChart'), {
       },
       {
         label: 'Flat $10/game',
-        data: [80.0, 110.0],
+        data: [80.0, 126.0, 99.5],
         borderColor: '#38bdf8',
         backgroundColor: 'rgba(56,189,248,0.05)',
         tension: 0.3,
@@ -624,7 +968,7 @@ new Chart(document.getElementById('bankrollChart'), {
       },
       {
         label: 'Quarter-Kelly',
-        data: [80.0, 110.0],
+        data: [80.0, 92.51, 92.51],
         borderColor: '#a78bfa',
         backgroundColor: 'rgba(167,139,250,0.05)',
         tension: 0.3,
@@ -662,11 +1006,11 @@ new Chart(document.getElementById('bankrollChart'), {
 new Chart(document.getElementById('winrateChart'), {
   type: 'bar',
   data: {
-    labels: ["R07"],
+    labels: ["R05", "R06"],
     datasets: [{
       label: 'Win Rate %',
-      data: [75.0],
-      backgroundColor: ["rgba(74,222,128,0.7)"],
+      data: [75.0, 37.5],
+      backgroundColor: ["rgba(74,222,128,0.7)", "rgba(248,113,113,0.7)"],
       borderRadius: 4,
     }],
   },

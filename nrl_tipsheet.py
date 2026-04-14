@@ -82,7 +82,7 @@ def fetch_upcoming_round_number(db=None):
             "https://www.nrl.com/draw/data",
             {"competition": NRL_COMPETITION_ID, "season": season},
         )
-        all_rounds = [r["value"] for r in draw.get("filterRounds", [])]
+        all_rounds = sorted([r["value"] for r in draw.get("filterRounds", [])], key=int)
         for rnd in all_rounds:
             try:
                 r_data = nrl_get(

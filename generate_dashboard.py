@@ -5,60 +5,9 @@ Run: python generate_dashboard.py
 """
 
 import json
-import os
 from datetime import datetime
 from jinja2 import Template
 from nrl_tracker import load_db, get_strategy_comparison, get_filter_recommendations
-
-USER_BETS_FILE = "user_bets.json"
-
-
-def load_user_bets():
-    """Load user_bets.json. Returns [] if missing or malformed."""
-    if not os.path.exists(USER_BETS_FILE):
-        return []
-    try:
-        with open(USER_BETS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        bets = data.get("bets", [])
-        # Compute derived fields
-        for b in bets:
-            odds = b.get("odds", 0)
-            stake = b.get("stake", 0)
-            result = b.get("result", "PENDING").upper()
-            b["result"] = result
-            if result == "WIN":
-                b["payout"] = round(odds * stake, 2)
-                b["profit"] = round(odds * stake - stake, 2)
-            elif result == "LOSS":
-                b["payout"] = 0.0
-                b["profit"] = -round(stake, 2)
-            else:
-                b["payout"] = None
-                b["profit"] = None
-        return bets
-    except Exception as e:
-        print(f"WARNING: Could not load {USER_BETS_FILE}: {e}")
-        return []
-
-
-def user_bets_summary(bets):
-    resolved = [b for b in bets if b["result"] in ("WIN", "LOSS")]
-    wins = sum(1 for b in resolved if b["result"] == "WIN")
-    staked = sum(b.get("stake", 0) for b in resolved)
-    returned = sum(b.get("payout", 0) or 0 for b in resolved)
-    profit = round(returned - staked, 2)
-    roi = round(profit / staked * 100, 1) if staked else 0
-    return {
-        "total": len(bets),
-        "resolved": len(resolved),
-        "wins": wins,
-        "losses": len(resolved) - wins,
-        "staked": staked,
-        "returned": returned,
-        "profit": profit,
-        "roi": roi,
-    }
 
 DASHBOARD_FILE = "dashboard.html"
 
@@ -246,69 +195,6 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
     <div class="empty-state-icon">🎯</div>
     <strong>Not enough data yet</strong>
     <p>Model calibration chart requires at least 10 resolved bets across probability buckets.</p>
-  </div>
-  {% endif %}
-
-  <!-- My Punts -->
-  <h2>My Punts</h2>
-  <p style="color:var(--muted);font-size:0.82rem;margin-bottom:12px;">Your actual bets — recorded in <code>user_bets.json</code>. Tracked separately from the model recommendations.</p>
-  {% if user_bets | length > 0 %}
-  <div class="kpi-grid" style="margin-bottom:16px;">
-    <div class="kpi-card">
-      <div class="kpi-value {% if user_bets_summary.profit > 0 %}positive{% elif user_bets_summary.profit < 0 %}negative{% else %}neutral{% endif %}">
-        {{ "%+.2f" | format(user_bets_summary.profit) if user_bets_summary.resolved > 0 else "—" }}
-      </div>
-      <div class="kpi-label">Net Profit ($)</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-value {% if user_bets_summary.roi > 0 %}positive{% elif user_bets_summary.roi < 0 %}negative{% else %}neutral{% endif %}">
-        {{ "%+.1f" | format(user_bets_summary.roi) ~ "%" if user_bets_summary.resolved > 0 else "—" }}
-      </div>
-      <div class="kpi-label">ROI</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-value">{{ user_bets_summary.wins }}W / {{ user_bets_summary.losses }}L</div>
-      <div class="kpi-label">Record</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-value">${{ "%.2f" | format(user_bets_summary.staked) }}</div>
-      <div class="kpi-label">Total Staked</div>
-    </div>
-  </div>
-  <div class="card" style="padding:0;overflow:hidden;">
-    <table>
-      <thead>
-        <tr><th>Round</th><th>Bet</th><th>Odds</th><th>Stake</th><th>Result</th><th>Payout</th><th>Profit</th><th>Notes</th></tr>
-      </thead>
-      <tbody>
-        {% for b in user_bets | sort(attribute='round_id', reverse=True) %}
-        <tr>
-          <td><strong>{{ b.round_id }}</strong><br><span style="color:var(--muted);font-size:0.74rem;">{{ b.game }}</span></td>
-          <td>{{ b.description }}</td>
-          <td>${{ b.odds }}</td>
-          <td>${{ b.stake }}</td>
-          <td>
-            {% if b.result == "WIN" %}<span class="badge badge-win">WIN</span>
-            {% elif b.result == "LOSS" %}<span class="badge badge-loss">LOSS</span>
-            {% else %}<span class="badge badge-pending">PENDING</span>{% endif %}
-          </td>
-          <td class="{% if b.payout %}positive{% endif %}">
-            {% if b.payout is not none %}${{ "%.2f" | format(b.payout) }}{% else %}—{% endif %}
-          </td>
-          <td class="{% if b.profit is not none %}{% if b.profit >= 0 %}positive{% else %}negative{% endif %}{% endif %}">
-            {% if b.profit is not none %}{{ "%+.2f" | format(b.profit) }}{% else %}—{% endif %}
-          </td>
-          <td style="color:var(--muted);font-size:0.78rem;">{{ b.notes or "" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="card empty-state">
-    <div class="empty-state-icon">🎰</div>
-    <strong>No personal punts recorded yet</strong>
-    <p>Edit <code>user_bets.json</code> in the repo to add your actual bets.</p>
   </div>
   {% endif %}
 
@@ -917,8 +803,6 @@ def build_dashboard_data(db):
         "round_rows": round_rows,
         "current_picks": current_picks,
         "recommendations": recommendations,
-        "user_bets": load_user_bets(),
-        "user_bets_summary": user_bets_summary(load_user_bets()),
         "generated_at": datetime.now().strftime("%d %b %Y %I:%M %p"),
     }
 

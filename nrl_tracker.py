@@ -443,7 +443,9 @@ def _recompute_lifetime(db):
                     lt["by_bet_type"][bet_type]["wins"] += 1
 
             # Model calibration (use recommended_bet model_prob)
-            mp = rec.get("model_prob", 0.5)
+            mp = rec.get("model_prob")
+            if mp is None:
+                continue
             for i, (_, lo, hi) in enumerate(CALIBRATION_BUCKETS):
                 if lo <= mp < hi:
                     lt["model_calibration"][i]["bets"] += 1

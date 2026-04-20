@@ -60,7 +60,7 @@
   <div class="header">
     <div>
       <h1>NRL Tracker Dashboard</h1>
-      <div class="generated">Generated 14 Apr 2026 03:25 PM</div>
+      <div class="generated">Generated 20 Apr 2026 11:57 PM</div>
     </div>
     <div class="header-links">
       <a href="tipsheet_output.html">Tipsheet</a>
@@ -70,35 +70,35 @@
   <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-value">2</div>
+      <div class="kpi-value">3</div>
       <div class="kpi-label">Rounds Tracked</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value positive">
-        56.2%
+      <div class="kpi-value neutral">
+        50.0%
       </div>
       <div class="kpi-label">Win Rate</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        +12.2%
+        +5.7%
       </div>
       <div class="kpi-label">Lifetime ROI</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        $99.50
+        $95.37
       </div>
       <div class="kpi-label">Current Bankroll</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value positive">
-        +19.50
+        +15.37
       </div>
       <div class="kpi-label">Net Profit ($)</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value neutral">16</div>
+      <div class="kpi-value neutral">24</div>
       <div class="kpi-label">Total Bets</div>
     </div>
   </div>
@@ -150,10 +150,14 @@
   <!-- Model Calibration -->
   <h2>Model Calibration</h2>
   
-  <div class="card empty-state">
-    <div class="empty-state-icon">🎯</div>
-    <strong>Not enough data yet</strong>
-    <p>Model calibration chart requires at least 10 resolved bets across probability buckets.</p>
+  <div class="card">
+    <p style="color: var(--muted); font-size: 0.8rem; margin-bottom: 12px;">
+      If the model is perfectly calibrated, the <strong style="color: #38bdf8;">Actual Win %</strong> line
+      should follow the <strong style="color: #94a3b8;">Diagonal (Perfect)</strong> line. Points above = model underestimates. Points below = model overestimates.
+    </p>
+    <div class="chart-container">
+      <canvas id="calibrationChart"></canvas>
+    </div>
   </div>
   
 
@@ -162,7 +166,7 @@
   
   <div class="card">
     <p style="color: var(--muted); font-size: 0.8rem; margin-bottom: 12px;">
-      Based on 16 resolved bets. Filters with fewer than 10 bets are excluded.
+      Based on 24 resolved bets. Filters with fewer than 10 bets are excluded.
       Use these to refine which bets to take — not financial advice.
     </p>
     <table>
@@ -179,21 +183,30 @@
       <tbody>
         
         <tr>
-          <td><strong>All bets (current strategy)</strong></td>
+          <td><strong>MARGINAL only</strong></td>
           <td>16</td>
           <td>9</td>
           <td class="positive">56.2%</td>
           <td class="positive">+12.2%</td>
+          <td><span class="badge badge-recommended">Recommended</span></td>
+        </tr>
+        
+        <tr>
+          <td><strong>All bets (current strategy)</strong></td>
+          <td>24</td>
+          <td>12</td>
+          <td class="neutral">50.0%</td>
+          <td class="positive">+5.7%</td>
           <td><span class="badge badge-baseline">Baseline</span></td>
         </tr>
         
         <tr>
           <td><strong>Line bets only</strong></td>
-          <td>11</td>
-          <td>6</td>
-          <td class="neutral">54.5%</td>
-          <td class="positive">+2.8%</td>
-          <td><span class="badge badge-caution">Caution</span></td>
+          <td>15</td>
+          <td>7</td>
+          <td class="neutral">46.7%</td>
+          <td class="negative">-15.6%</td>
+          <td><span class="badge badge-avoid">Avoid</span></td>
         </tr>
         
       </tbody>
@@ -203,7 +216,7 @@
 
   <!-- This Week's Picks -->
   
-  <h2>2026-R07 — Picks & Results</h2>
+  <h2>2026-R08 — Picks & Results</h2>
   
   <p style="color:var(--muted);font-size:0.82rem;margin-bottom:12px;">Results pending — enter them via GitHub Actions → "Record Round Results" to update the dashboard.</p>
   
@@ -223,96 +236,8 @@
       <tbody>
         
         <tr>
-          <td style="white-space:nowrap"><strong>North Queensland Cowboys</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Manly Warringah Sea Eagles</span></td>
-          <td>Manly Warringah Sea Eagles to win</td>
-          <td>$2.45</td>
-          <td>
-            
-            <span class="badge badge-recommended">VALUE</span>
-            
-          </td>
-          <td>
-            
-            <span class="badge badge-pending">PENDING</span>
-            
-          </td>
-          <td class="">
-            —
-          </td>
-          <td class="">
-            —
-          </td>
-        </tr>
-        
-        <tr>
-          <td style="white-space:nowrap"><strong>Canberra Raiders</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Melbourne Storm</span></td>
-          <td>Melbourne Storm -1.5</td>
-          <td>$1.91</td>
-          <td>
-            
-            <span class="badge badge-win">STRONG VALUE</span>
-            
-          </td>
-          <td>
-            
-            <span class="badge badge-pending">PENDING</span>
-            
-          </td>
-          <td class="">
-            —
-          </td>
-          <td class="">
-            —
-          </td>
-        </tr>
-        
-        <tr>
-          <td style="white-space:nowrap"><strong>Dolphins</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Penrith Panthers</span></td>
-          <td>Dolphins to win</td>
-          <td>$4.19</td>
-          <td>
-            
-            <span class="badge badge-win">STRONG VALUE</span>
-            
-          </td>
-          <td>
-            
-            <span class="badge badge-pending">PENDING</span>
-            
-          </td>
-          <td class="">
-            —
-          </td>
-          <td class="">
-            —
-          </td>
-        </tr>
-        
-        <tr>
-          <td style="white-space:nowrap"><strong>New Zealand Warriors</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Gold Coast Titans</span></td>
-          <td>New Zealand Warriors -11.5</td>
-          <td>$1.89</td>
-          <td>
-            
-            <span class="badge badge-win">STRONG VALUE</span>
-            
-          </td>
-          <td>
-            
-            <span class="badge badge-pending">PENDING</span>
-            
-          </td>
-          <td class="">
-            —
-          </td>
-          <td class="">
-            —
-          </td>
-        </tr>
-        
-        <tr>
-          <td style="white-space:nowrap"><strong>South Sydney Rabbitohs</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs St George Illawarra Dragons</span></td>
-          <td>South Sydney Rabbitohs -13.5</td>
+          <td style="white-space:nowrap"><strong>Wests Tigers</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Canberra Raiders</span></td>
+          <td>Wests Tigers -5.5</td>
           <td>$1.9</td>
           <td>
             
@@ -333,8 +258,96 @@
         </tr>
         
         <tr>
-          <td style="white-space:nowrap"><strong>Wests Tigers</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Brisbane Broncos</span></td>
-          <td>Wests Tigers -6.5</td>
+          <td style="white-space:nowrap"><strong>North Queensland Cowboys</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Cronulla Sutherland Sharks</span></td>
+          <td>Cronulla Sutherland Sharks -2.5</td>
+          <td>$1.92</td>
+          <td>
+            
+            <span class="badge badge-win">STRONG VALUE</span>
+            
+          </td>
+          <td>
+            
+            <span class="badge badge-pending">PENDING</span>
+            
+          </td>
+          <td class="">
+            —
+          </td>
+          <td class="">
+            —
+          </td>
+        </tr>
+        
+        <tr>
+          <td style="white-space:nowrap"><strong>Brisbane Broncos</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Canterbury Bulldogs</span></td>
+          <td>Brisbane Broncos +2.5</td>
+          <td>$1.91</td>
+          <td>
+            
+            <span class="badge badge-win">STRONG VALUE</span>
+            
+          </td>
+          <td>
+            
+            <span class="badge badge-pending">PENDING</span>
+            
+          </td>
+          <td class="">
+            —
+          </td>
+          <td class="">
+            —
+          </td>
+        </tr>
+        
+        <tr>
+          <td style="white-space:nowrap"><strong>St George Illawarra Dragons</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Sydney Roosters</span></td>
+          <td>Sydney Roosters to win</td>
+          <td>$1.17</td>
+          <td>
+            
+            <span class="badge badge-recommended">VALUE</span>
+            
+          </td>
+          <td>
+            
+            <span class="badge badge-pending">PENDING</span>
+            
+          </td>
+          <td class="">
+            —
+          </td>
+          <td class="">
+            —
+          </td>
+        </tr>
+        
+        <tr>
+          <td style="white-space:nowrap"><strong>New Zealand Warriors</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Dolphins</span></td>
+          <td>New Zealand Warriors -5.5</td>
+          <td>$1.86</td>
+          <td>
+            
+            <span class="badge badge-win">STRONG VALUE</span>
+            
+          </td>
+          <td>
+            
+            <span class="badge badge-pending">PENDING</span>
+            
+          </td>
+          <td class="">
+            —
+          </td>
+          <td class="">
+            —
+          </td>
+        </tr>
+        
+        <tr>
+          <td style="white-space:nowrap"><strong>Melbourne Storm</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs South Sydney Rabbitohs</span></td>
+          <td>Melbourne Storm -2.5</td>
           <td>$1.89</td>
           <td>
             
@@ -355,9 +368,9 @@
         </tr>
         
         <tr>
-          <td style="white-space:nowrap"><strong>Sydney Roosters</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Newcastle Knights</span></td>
+          <td style="white-space:nowrap"><strong>Newcastle Knights</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Penrith Panthers</span></td>
           <td>Newcastle Knights to win</td>
-          <td>$3.3</td>
+          <td>$3.59</td>
           <td>
             
             <span class="badge badge-win">STRONG VALUE</span>
@@ -377,9 +390,9 @@
         </tr>
         
         <tr>
-          <td style="white-space:nowrap"><strong>Parramatta Eels</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Canterbury Bulldogs</span></td>
+          <td style="white-space:nowrap"><strong>Manly Warringah Sea Eagles</strong><br><span style="color:var(--muted);font-size:0.76rem;">vs Parramatta Eels</span></td>
           <td>Parramatta Eels to win</td>
-          <td>$3.35</td>
+          <td>$3.04</td>
           <td>
             
             <span class="badge badge-win">STRONG VALUE</span>
@@ -422,7 +435,7 @@
       <tbody>
         
         <tr>
-          <td><strong>2026-R07</strong></td>
+          <td><strong>2026-R08</strong></td>
           <td>
             
             <span class="badge badge-pending">PENDING</span>
@@ -456,72 +469,8 @@
                 <tbody>
                   
                   <tr>
-                    <td>North Queensland Cowboys vs Manly Warringah Sea Eagles</td>
-                    <td>Manly Warringah Sea Eagles to win</td>
-                    <td>$2.45</td>
-                    <td>
-                      <span class="badge badge-pending">PENDING</span>
-                      
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>Canberra Raiders vs Melbourne Storm</td>
-                    <td>Melbourne Storm -1.5</td>
-                    <td>$1.91</td>
-                    <td>
-                      <span class="badge badge-pending">PENDING</span>
-                      
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>Dolphins vs Penrith Panthers</td>
-                    <td>Dolphins to win</td>
-                    <td>$4.19</td>
-                    <td>
-                      <span class="badge badge-pending">PENDING</span>
-                      
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>New Zealand Warriors vs Gold Coast Titans</td>
-                    <td>New Zealand Warriors -11.5</td>
-                    <td>$1.89</td>
-                    <td>
-                      <span class="badge badge-pending">PENDING</span>
-                      
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                    <td class="">
-                      —
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>South Sydney Rabbitohs vs St George Illawarra Dragons</td>
-                    <td>South Sydney Rabbitohs -13.5</td>
+                    <td>Wests Tigers vs Canberra Raiders</td>
+                    <td>Wests Tigers -5.5</td>
                     <td>$1.9</td>
                     <td>
                       <span class="badge badge-pending">PENDING</span>
@@ -536,8 +485,72 @@
                   </tr>
                   
                   <tr>
-                    <td>Wests Tigers vs Brisbane Broncos</td>
-                    <td>Wests Tigers -6.5</td>
+                    <td>North Queensland Cowboys vs Cronulla Sutherland Sharks</td>
+                    <td>Cronulla Sutherland Sharks -2.5</td>
+                    <td>$1.92</td>
+                    <td>
+                      <span class="badge badge-pending">PENDING</span>
+                      
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Brisbane Broncos vs Canterbury Bulldogs</td>
+                    <td>Brisbane Broncos +2.5</td>
+                    <td>$1.91</td>
+                    <td>
+                      <span class="badge badge-pending">PENDING</span>
+                      
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>St George Illawarra Dragons vs Sydney Roosters</td>
+                    <td>Sydney Roosters to win</td>
+                    <td>$1.17</td>
+                    <td>
+                      <span class="badge badge-pending">PENDING</span>
+                      
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>New Zealand Warriors vs Dolphins</td>
+                    <td>New Zealand Warriors -5.5</td>
+                    <td>$1.86</td>
+                    <td>
+                      <span class="badge badge-pending">PENDING</span>
+                      
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                    <td class="">
+                      —
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Melbourne Storm vs South Sydney Rabbitohs</td>
+                    <td>Melbourne Storm -2.5</td>
                     <td>$1.89</td>
                     <td>
                       <span class="badge badge-pending">PENDING</span>
@@ -552,9 +565,9 @@
                   </tr>
                   
                   <tr>
-                    <td>Sydney Roosters vs Newcastle Knights</td>
+                    <td>Newcastle Knights vs Penrith Panthers</td>
                     <td>Newcastle Knights to win</td>
-                    <td>$3.3</td>
+                    <td>$3.59</td>
                     <td>
                       <span class="badge badge-pending">PENDING</span>
                       
@@ -568,9 +581,9 @@
                   </tr>
                   
                   <tr>
-                    <td>Parramatta Eels vs Canterbury Bulldogs</td>
+                    <td>Manly Warringah Sea Eagles vs Parramatta Eels</td>
                     <td>Parramatta Eels to win</td>
-                    <td>$3.35</td>
+                    <td>$3.04</td>
                     <td>
                       <span class="badge badge-pending">PENDING</span>
                       
@@ -580,6 +593,170 @@
                     </td>
                     <td class="">
                       —
+                    </td>
+                  </tr>
+                  
+                </tbody>
+              </table>
+            </details>
+          </td>
+        </tr>
+        
+        
+        <tr>
+          <td><strong>2026-R07</strong></td>
+          <td>
+            
+            <span class="positive">3W</span> / <span class="negative">5L</span>
+            
+          </td>
+          <td>$80.00</td>
+          <td>$77.00</td>
+          <td class="negative">
+            -3.00
+          </td>
+          <td class="negative">
+            -3.8%
+          </td>
+          <td class="negative">
+            $95.37
+          </td>
+        </tr>
+        
+        <tr>
+          <td colspan="7" style="padding:0;background:#0f172a;">
+            <details style="padding:8px 12px;">
+              <summary style="cursor:pointer;color:var(--muted);font-size:0.78rem;list-style:none;display:flex;align-items:center;gap:6px;">
+                ▶ Show 8 game picks
+              </summary>
+              <table style="margin-top:8px;font-size:0.78rem;">
+                <thead>
+                  <tr>
+                    <th>Game</th><th>Recommendation</th><th>Odds</th><th>Result</th><th>$10 Return</th><th>Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                  <tr>
+                    <td>North Queensland Cowboys vs Manly Warringah Sea Eagles</td>
+                    <td>Manly Warringah Sea Eagles to win</td>
+                    <td>$2.45</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $24.50
+                    </td>
+                    <td class="positive">
+                      +14.50
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Canberra Raiders vs Melbourne Storm</td>
+                    <td>Melbourne Storm -1.5</td>
+                    <td>$1.91</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Dolphins vs Penrith Panthers</td>
+                    <td>Dolphins to win</td>
+                    <td>$4.19</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>New Zealand Warriors vs Gold Coast Titans</td>
+                    <td>New Zealand Warriors -11.5</td>
+                    <td>$1.89</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>South Sydney Rabbitohs vs St George Illawarra Dragons</td>
+                    <td>South Sydney Rabbitohs -13.5</td>
+                    <td>$1.9</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $19.00
+                    </td>
+                    <td class="positive">
+                      +9.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Wests Tigers vs Brisbane Broncos</td>
+                    <td>Wests Tigers -6.5</td>
+                    <td>$1.89</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Sydney Roosters vs Newcastle Knights</td>
+                    <td>Newcastle Knights to win</td>
+                    <td>$3.3</td>
+                    <td>
+                      <span class="badge badge-loss">LOSS</span>
+                    </td>
+                    <td class="negative">
+                      $0.00
+                    </td>
+                    <td class="negative">
+                      -10.00
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>Parramatta Eels vs Canterbury Bulldogs</td>
+                    <td>Parramatta Eels to win</td>
+                    <td>$3.35</td>
+                    <td>
+                      <span class="badge badge-win">WIN</span>
+                      
+                    </td>
+                    <td class="positive">
+                      $33.50
+                    </td>
+                    <td class="positive">
+                      +23.50
                     </td>
                   </tr>
                   
@@ -945,11 +1122,11 @@ Chart.defaults.borderColor = chartDefaults.borderColor;
 new Chart(document.getElementById('bankrollChart'), {
   type: 'line',
   data: {
-    labels: ["Start", "2026-R05", "2026-R06"],
+    labels: ["Start", "2026-R05", "2026-R06", "2026-R07"],
     datasets: [
       {
         label: 'Your Strategy (Compounding)',
-        data: [80.0, 126.0, 84.26],
+        data: [80.0, 126.0, 84.26, 81.1],
         borderColor: '#4ade80',
         backgroundColor: 'rgba(74,222,128,0.08)',
         tension: 0.3,
@@ -958,7 +1135,7 @@ new Chart(document.getElementById('bankrollChart'), {
       },
       {
         label: 'Flat $10/game',
-        data: [80.0, 126.0, 99.5],
+        data: [80.0, 126.0, 99.5, 96.5],
         borderColor: '#38bdf8',
         backgroundColor: 'rgba(56,189,248,0.05)',
         tension: 0.3,
@@ -968,7 +1145,7 @@ new Chart(document.getElementById('bankrollChart'), {
       },
       {
         label: 'Quarter-Kelly',
-        data: [80.0, 92.51, 92.51],
+        data: [80.0, 92.51, 92.51, 67.93],
         borderColor: '#a78bfa',
         backgroundColor: 'rgba(167,139,250,0.05)',
         tension: 0.3,
@@ -1006,11 +1183,11 @@ new Chart(document.getElementById('bankrollChart'), {
 new Chart(document.getElementById('winrateChart'), {
   type: 'bar',
   data: {
-    labels: ["R05", "R06"],
+    labels: ["R05", "R06", "R07"],
     datasets: [{
       label: 'Win Rate %',
-      data: [75.0, 37.5],
-      backgroundColor: ["rgba(74,222,128,0.7)", "rgba(248,113,113,0.7)"],
+      data: [75.0, 37.5, 37.5],
+      backgroundColor: ["rgba(74,222,128,0.7)", "rgba(248,113,113,0.7)", "rgba(248,113,113,0.7)"],
       borderRadius: 4,
     }],
   },
@@ -1042,15 +1219,15 @@ new Chart(document.getElementById('labelChart'), {
     datasets: [
       {
         label: 'Win Rate %',
-        data: [0, 0, 0],
+        data: [28.6, 100.0, 56.2],
         backgroundColor: 'rgba(56,189,248,0.7)',
         borderRadius: 4,
         yAxisID: 'y',
       },
       {
         label: 'ROI %',
-        data: [0, 0, 0],
-        backgroundColor: ["rgba(74,222,128,0.7)", "rgba(74,222,128,0.7)", "rgba(74,222,128,0.7)"],
+        data: [-25.0, 145.0, 12.2],
+        backgroundColor: ["rgba(248,113,113,0.7)", "rgba(74,222,128,0.7)", "rgba(74,222,128,0.7)"],
         borderRadius: 4,
         yAxisID: 'y2',
       },
@@ -1088,6 +1265,57 @@ new Chart(document.getElementById('labelChart'), {
 });
 
 
+
+// Model Calibration Chart
+new Chart(document.getElementById('calibrationChart'), {
+  type: 'line',
+  data: {
+    labels: ["0-10%", "10-20%", "20-30%", "30-40%", "40-50%", "50-60%", "60-70%", "70-80%", "80-90%", "90-100%"],
+    datasets: [
+      {
+        label: 'Actual Win %',
+        data: [null, null, null, null, null, null, 33.3, null, null, null],
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56,189,248,0.1)',
+        tension: 0.3,
+        borderWidth: 2.5,
+        pointRadius: 5,
+      },
+      {
+        label: 'Perfect Calibration',
+        data: [5.0, 15.0, 25.0, 35.0, 45.0, 55.0, 65.0, 75.0, 85.0, 95.0],
+        borderColor: '#334155',
+        borderDash: [6, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.datasetIndex === 0
+            ? ` Actual: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) + '%' : 'No data'}`
+            : ` Perfect: ${ctx.parsed.y.toFixed(1)}%`
+        }
+      },
+    },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+      y: {
+        min: 0, max: 100,
+        grid: { color: '#1e293b' },
+        ticks: { color: '#94a3b8', callback: v => v + '%' },
+      },
+    },
+  },
+});
 
 
 </script>

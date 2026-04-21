@@ -827,10 +827,14 @@ def analyse_game(game, team_stats, team_form, all_player_stats):
     result["ats_picks"] = sorted(result["ats_picks"], key=lambda x: x["edge"], reverse=True)[:5]
     result["fts_picks"] = sorted(result["fts_picks"], key=lambda x: x["edge"], reverse=True)[:5]
 
-    # Best bet this game = highest expected return across all value bets.
-    # This prioritises dollar return over pure edge %, so big-odds value bets surface.
+    # Best bet this game: prefer H2H (historically +39% ROI vs Line -16% ROI).
+    # Only fall back to Line/ATS/FTS when no H2H has positive edge.
     if result["all_value_bets"]:
-        result["best_bet"] = max(result["all_value_bets"], key=lambda x: x["exp_return"])
+        h2h_value = [b for b in result["all_value_bets"] if b["bet_type"] == "H2H"]
+        if h2h_value:
+            result["best_bet"] = max(h2h_value, key=lambda x: x["exp_return"])
+        else:
+            result["best_bet"] = max(result["all_value_bets"], key=lambda x: x["exp_return"])
 
     return result
 

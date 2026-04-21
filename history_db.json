@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 1,
     "created_at": "2026-03-23T22:00:00Z",
-    "last_updated": "2026-04-20T23:57:51Z"
+    "last_updated": "2026-04-21T00:08:44Z"
   },
   "rounds": [
     {
@@ -1093,9 +1093,9 @@
       "round_id": "2026-R08",
       "season": 2026,
       "round_number": 8,
-      "generated_at": "2026-04-20T23:57:51Z",
-      "bankroll_start": 99.5,
-      "stake_per_game": 12.44,
+      "generated_at": "2026-04-21T00:08:44Z",
+      "bankroll_start": 95.37,
+      "stake_per_game": 11.92,
       "strategy": "flat_compounding",
       "games": [
         {
@@ -1169,7 +1169,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1180,16 +1180,16 @@
           "away_team": "Cronulla Sutherland Sharks",
           "kickoff": "2026-04-24T08:00:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
-            "team": "Cronulla Sutherland Sharks",
-            "description": "Cronulla Sutherland Sharks -2.5",
-            "odds": 1.92,
-            "model_prob": 0.7119,
-            "implied_prob": 0.5208,
-            "edge": 0.1911,
-            "label": "STRONG VALUE",
-            "value_score": 0.136,
-            "point": -2.5
+            "bet_type": "H2H",
+            "team": "North Queensland Cowboys",
+            "description": "North Queensland Cowboys to win",
+            "odds": 2.12,
+            "model_prob": 0.5272,
+            "implied_prob": 0.4717,
+            "edge": 0.0555,
+            "label": "VALUE",
+            "value_score": 0.0293,
+            "point": null
           },
           "h2h_bets": [
             {
@@ -1245,7 +1245,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1256,16 +1256,16 @@
           "away_team": "Canterbury Bulldogs",
           "kickoff": "2026-04-24T10:00:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
+            "bet_type": "H2H",
             "team": "Brisbane Broncos",
-            "description": "Brisbane Broncos +2.5",
-            "odds": 1.91,
-            "model_prob": 0.6459,
-            "implied_prob": 0.5236,
-            "edge": 0.1223,
-            "label": "STRONG VALUE",
-            "value_score": 0.079,
-            "point": 2.5
+            "description": "Brisbane Broncos to win",
+            "odds": 2.23,
+            "model_prob": 0.4828,
+            "implied_prob": 0.4484,
+            "edge": 0.0344,
+            "label": "VALUE",
+            "value_score": 0.0166,
+            "point": null
           },
           "h2h_bets": [
             {
@@ -1321,7 +1321,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1397,7 +1397,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1473,7 +1473,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1484,16 +1484,16 @@
           "away_team": "South Sydney Rabbitohs",
           "kickoff": "2026-04-25T10:10:00Z",
           "recommended_bet": {
-            "bet_type": "Line",
-            "team": "Melbourne Storm",
-            "description": "Melbourne Storm -2.5",
-            "odds": 1.89,
-            "model_prob": 0.7014,
-            "implied_prob": 0.5291,
-            "edge": 0.1723,
+            "bet_type": "H2H",
+            "team": "South Sydney Rabbitohs",
+            "description": "South Sydney Rabbitohs to win",
+            "odds": 2.28,
+            "model_prob": 0.5556,
+            "implied_prob": 0.4386,
+            "edge": 0.117,
             "label": "STRONG VALUE",
-            "value_score": 0.1209,
-            "point": -2.5
+            "value_score": 0.065,
+            "point": null
           },
           "h2h_bets": [
             {
@@ -1549,7 +1549,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1625,7 +1625,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null
@@ -1701,7 +1701,7 @@
           ],
           "ats_picks": [],
           "fts_picks": [],
-          "stake": 12.44,
+          "stake": 11.92,
           "result": null,
           "won": null,
           "payout": null

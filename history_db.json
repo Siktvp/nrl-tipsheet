@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 1,
     "created_at": "2026-03-23T22:00:00Z",
-    "last_updated": "2026-07-13T22:50:22Z"
+    "last_updated": "2026-07-20T22:53:32Z"
   },
   "rounds": [
     {
@@ -7783,9 +7783,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "WIN",
+          "won": true,
+          "payout": 52.24
         },
         {
           "game_id": "Cronulla Sutherland Sharks-Newcastle Knights",
@@ -7859,9 +7859,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
         },
         {
           "game_id": "Sydney Roosters-Melbourne Storm",
@@ -7935,9 +7935,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
         },
         {
           "game_id": "Canberra Raiders-South Sydney Rabbitohs",
@@ -8011,9 +8011,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
         },
         {
           "game_id": "New Zealand Warriors-St George Illawarra Dragons",
@@ -8087,9 +8087,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
         },
         {
           "game_id": "Canterbury Bulldogs-Wests Tigers",
@@ -8239,9 +8239,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
         },
         {
           "game_id": "Dolphins-North Queensland Cowboys",
@@ -8315,6 +8315,634 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 11.82,
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
+        }
+      ],
+      "round_result": {
+        "resolved_at": "2026-07-20T22:53:32Z",
+        "wins": 1,
+        "losses": 6,
+        "total_staked": 82.74,
+        "total_returned": 52.24,
+        "net_profit": -30.5,
+        "bankroll_end": null
+      }
+    },
+    {
+      "round_id": "2026-R21",
+      "season": 2026,
+      "round_number": 21,
+      "generated_at": "2026-07-20T22:53:32Z",
+      "bankroll_start": 94.56,
+      "stake_per_game": 11.82,
+      "strategy": "flat_compounding",
+      "games": [
+        {
+          "game_id": "Parramatta Eels-Penrith Panthers",
+          "home_team": "Parramatta Eels",
+          "away_team": "Penrith Panthers",
+          "kickoff": "2026-07-23T09:50:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Parramatta Eels",
+            "description": "Parramatta Eels to win",
+            "odds": 4.8,
+            "model_prob": 0.3771,
+            "implied_prob": 0.2083,
+            "edge": 0.1688,
+            "label": "STRONG VALUE",
+            "value_score": 0.0637,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Parramatta Eels",
+              "description": "Parramatta Eels to win",
+              "odds": 4.8,
+              "model_prob": 0.3771,
+              "implied_prob": 0.2083,
+              "edge": 0.1688,
+              "label": "STRONG VALUE",
+              "value_score": 0.0637,
+              "exp_return": 18.1
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Penrith Panthers",
+              "description": "Penrith Panthers to win",
+              "odds": 1.18,
+              "model_prob": 0.6229,
+              "implied_prob": 0.8475,
+              "edge": -0.2246,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 7.35
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Parramatta Eels",
+              "description": "Parramatta Eels +14.5",
+              "odds": 1.88,
+              "model_prob": 0.05,
+              "implied_prob": 0.5319,
+              "edge": -0.4819,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 0.94
+            },
+            {
+              "bet_type": "Line",
+              "team": "Penrith Panthers",
+              "description": "Penrith Panthers -14.5",
+              "odds": 1.91,
+              "model_prob": 0.648,
+              "implied_prob": 0.5236,
+              "edge": 0.1244,
+              "label": "STRONG VALUE",
+              "value_score": 0.0806,
+              "exp_return": 12.38
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "Newcastle Knights-Sydney Roosters",
+          "home_team": "Newcastle Knights",
+          "away_team": "Sydney Roosters",
+          "kickoff": "2026-07-24T08:00:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Newcastle Knights",
+            "description": "Newcastle Knights to win",
+            "odds": 2.1,
+            "model_prob": 0.6001,
+            "implied_prob": 0.4762,
+            "edge": 0.1239,
+            "label": "STRONG VALUE",
+            "value_score": 0.0744,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Newcastle Knights",
+              "description": "Newcastle Knights to win",
+              "odds": 2.1,
+              "model_prob": 0.6001,
+              "implied_prob": 0.4762,
+              "edge": 0.1239,
+              "label": "STRONG VALUE",
+              "value_score": 0.0744,
+              "exp_return": 12.6
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Sydney Roosters",
+              "description": "Sydney Roosters to win",
+              "odds": 1.66,
+              "model_prob": 0.3999,
+              "implied_prob": 0.6024,
+              "edge": -0.2025,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 6.64
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Newcastle Knights",
+              "description": "Newcastle Knights +2.5",
+              "odds": 1.85,
+              "model_prob": 0.6689,
+              "implied_prob": 0.5405,
+              "edge": 0.1284,
+              "label": "STRONG VALUE",
+              "value_score": 0.0859,
+              "exp_return": 12.37
+            },
+            {
+              "bet_type": "Line",
+              "team": "Sydney Roosters",
+              "description": "Sydney Roosters -2.5",
+              "odds": 1.94,
+              "model_prob": 0.4651,
+              "implied_prob": 0.5155,
+              "edge": -0.0504,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 9.02
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "South Sydney Rabbitohs-Melbourne Storm",
+          "home_team": "South Sydney Rabbitohs",
+          "away_team": "Melbourne Storm",
+          "kickoff": "2026-07-24T10:00:00Z",
+          "recommended_bet": {
+            "bet_type": "Line",
+            "team": "Melbourne Storm",
+            "description": "Melbourne Storm +5.5",
+            "odds": 1.9,
+            "model_prob": 0.75,
+            "implied_prob": 0.5263,
+            "edge": 0.2237,
+            "label": "STRONG VALUE",
+            "value_score": 0.1678,
+            "point": 5.5
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Melbourne Storm",
+              "description": "Melbourne Storm to win",
+              "odds": 2.41,
+              "model_prob": 0.3659,
+              "implied_prob": 0.4149,
+              "edge": -0.049,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 8.82
+            },
+            {
+              "bet_type": "H2H",
+              "team": "South Sydney Rabbitohs",
+              "description": "South Sydney Rabbitohs to win",
+              "odds": 1.47,
+              "model_prob": 0.6341,
+              "implied_prob": 0.6803,
+              "edge": -0.0462,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 9.32
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Melbourne Storm",
+              "description": "Melbourne Storm +5.5",
+              "odds": 1.9,
+              "model_prob": 0.75,
+              "implied_prob": 0.5263,
+              "edge": 0.2237,
+              "label": "STRONG VALUE",
+              "value_score": 0.1678,
+              "exp_return": 14.25
+            },
+            {
+              "bet_type": "Line",
+              "team": "South Sydney Rabbitohs",
+              "description": "South Sydney Rabbitohs -5.5",
+              "odds": 1.89,
+              "model_prob": 0.5104,
+              "implied_prob": 0.5291,
+              "edge": -0.0187,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 9.65
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "Canberra Raiders-Wests Tigers",
+          "home_team": "Canberra Raiders",
+          "away_team": "Wests Tigers",
+          "kickoff": "2026-07-25T05:00:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Wests Tigers",
+            "description": "Wests Tigers to win",
+            "odds": 3.98,
+            "model_prob": 0.5404,
+            "implied_prob": 0.2513,
+            "edge": 0.2891,
+            "label": "STRONG VALUE",
+            "value_score": 0.1562,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Canberra Raiders",
+              "description": "Canberra Raiders to win",
+              "odds": 1.21,
+              "model_prob": 0.4596,
+              "implied_prob": 0.8264,
+              "edge": -0.3668,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 5.56
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Wests Tigers",
+              "description": "Wests Tigers to win",
+              "odds": 3.98,
+              "model_prob": 0.5404,
+              "implied_prob": 0.2513,
+              "edge": 0.2891,
+              "label": "STRONG VALUE",
+              "value_score": 0.1562,
+              "exp_return": 21.51
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Canberra Raiders",
+              "description": "Canberra Raiders -13.5",
+              "odds": 1.88,
+              "model_prob": 0.0652,
+              "implied_prob": 0.5319,
+              "edge": -0.4667,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 1.23
+            },
+            {
+              "bet_type": "Line",
+              "team": "Wests Tigers",
+              "description": "Wests Tigers +13.5",
+              "odds": 1.91,
+              "model_prob": 0.66,
+              "implied_prob": 0.5236,
+              "edge": 0.1364,
+              "label": "STRONG VALUE",
+              "value_score": 0.09,
+              "exp_return": 12.61
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "Canterbury Bulldogs-New Zealand Warriors",
+          "home_team": "Canterbury Bulldogs",
+          "away_team": "New Zealand Warriors",
+          "kickoff": "2026-07-25T07:30:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Canterbury Bulldogs",
+            "description": "Canterbury Bulldogs to win",
+            "odds": 2.37,
+            "model_prob": 0.4755,
+            "implied_prob": 0.4219,
+            "edge": 0.0536,
+            "label": "VALUE",
+            "value_score": 0.0255,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Canterbury Bulldogs",
+              "description": "Canterbury Bulldogs to win",
+              "odds": 2.37,
+              "model_prob": 0.4755,
+              "implied_prob": 0.4219,
+              "edge": 0.0536,
+              "label": "VALUE",
+              "value_score": 0.0255,
+              "exp_return": 11.27
+            },
+            {
+              "bet_type": "H2H",
+              "team": "New Zealand Warriors",
+              "description": "New Zealand Warriors to win",
+              "odds": 1.53,
+              "model_prob": 0.5245,
+              "implied_prob": 0.6536,
+              "edge": -0.1291,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 8.02
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Canterbury Bulldogs",
+              "description": "Canterbury Bulldogs +4.5",
+              "odds": 1.89,
+              "model_prob": 0.142,
+              "implied_prob": 0.5291,
+              "edge": -0.3871,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 2.68
+            },
+            {
+              "bet_type": "Line",
+              "team": "New Zealand Warriors",
+              "description": "New Zealand Warriors -4.5",
+              "odds": 1.9,
+              "model_prob": 0.75,
+              "implied_prob": 0.5263,
+              "edge": 0.2237,
+              "label": "STRONG VALUE",
+              "value_score": 0.1678,
+              "exp_return": 14.25
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "North Queensland Cowboys-Brisbane Broncos",
+          "home_team": "North Queensland Cowboys",
+          "away_team": "Brisbane Broncos",
+          "kickoff": "2026-07-25T09:35:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "North Queensland Cowboys",
+            "description": "North Queensland Cowboys to win",
+            "odds": 2.05,
+            "model_prob": 0.4967,
+            "implied_prob": 0.4878,
+            "edge": 0.0089,
+            "label": "MARGINAL",
+            "value_score": 0.0044,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Brisbane Broncos",
+              "description": "Brisbane Broncos to win",
+              "odds": 1.75,
+              "model_prob": 0.5033,
+              "implied_prob": 0.5714,
+              "edge": -0.0681,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 8.81
+            },
+            {
+              "bet_type": "H2H",
+              "team": "North Queensland Cowboys",
+              "description": "North Queensland Cowboys to win",
+              "odds": 2.05,
+              "model_prob": 0.4967,
+              "implied_prob": 0.4878,
+              "edge": 0.0089,
+              "label": "MARGINAL",
+              "value_score": 0.0044,
+              "exp_return": 10.18
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Brisbane Broncos",
+              "description": "Brisbane Broncos -2.5",
+              "odds": 1.9,
+              "model_prob": 0.4349,
+              "implied_prob": 0.5263,
+              "edge": -0.0914,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 8.26
+            },
+            {
+              "bet_type": "Line",
+              "team": "North Queensland Cowboys",
+              "description": "North Queensland Cowboys +2.5",
+              "odds": 1.89,
+              "model_prob": 0.5301,
+              "implied_prob": 0.5291,
+              "edge": 0.001,
+              "label": "MARGINAL",
+              "value_score": 0.0005,
+              "exp_return": 10.02
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "St George Illawarra Dragons-Gold Coast Titans",
+          "home_team": "St George Illawarra Dragons",
+          "away_team": "Gold Coast Titans",
+          "kickoff": "2026-07-26T04:00:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Gold Coast Titans",
+            "description": "Gold Coast Titans to win",
+            "odds": 1.84,
+            "model_prob": 0.6287,
+            "implied_prob": 0.5435,
+            "edge": 0.0852,
+            "label": "VALUE",
+            "value_score": 0.0536,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Gold Coast Titans",
+              "description": "Gold Coast Titans to win",
+              "odds": 1.84,
+              "model_prob": 0.6287,
+              "implied_prob": 0.5435,
+              "edge": 0.0852,
+              "label": "VALUE",
+              "value_score": 0.0536,
+              "exp_return": 11.57
+            },
+            {
+              "bet_type": "H2H",
+              "team": "St George Illawarra Dragons",
+              "description": "St George Illawarra Dragons to win",
+              "odds": 1.8,
+              "model_prob": 0.3713,
+              "implied_prob": 0.5556,
+              "edge": -0.1843,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 6.68
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Gold Coast Titans",
+              "description": "Gold Coast Titans +0.5",
+              "odds": 1.94,
+              "model_prob": 0.358,
+              "implied_prob": 0.5155,
+              "edge": -0.1575,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 6.95
+            },
+            {
+              "bet_type": "Line",
+              "team": "St George Illawarra Dragons",
+              "description": "St George Illawarra Dragons -0.5",
+              "odds": 1.86,
+              "model_prob": 0.05,
+              "implied_prob": 0.5376,
+              "edge": -0.4876,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 0.93
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "Manly Warringah Sea Eagles-Cronulla Sutherland Sharks",
+          "home_team": "Manly Warringah Sea Eagles",
+          "away_team": "Cronulla Sutherland Sharks",
+          "kickoff": "2026-07-26T06:05:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Manly Warringah Sea Eagles",
+            "description": "Manly Warringah Sea Eagles to win",
+            "odds": 2.16,
+            "model_prob": 0.4828,
+            "implied_prob": 0.463,
+            "edge": 0.0198,
+            "label": "MARGINAL",
+            "value_score": 0.0096,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Cronulla Sutherland Sharks",
+              "description": "Cronulla Sutherland Sharks to win",
+              "odds": 1.58,
+              "model_prob": 0.5172,
+              "implied_prob": 0.6329,
+              "edge": -0.1157,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 8.17
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Manly Warringah Sea Eagles",
+              "description": "Manly Warringah Sea Eagles to win",
+              "odds": 2.16,
+              "model_prob": 0.4828,
+              "implied_prob": 0.463,
+              "edge": 0.0198,
+              "label": "MARGINAL",
+              "value_score": 0.0096,
+              "exp_return": 10.43
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Cronulla Sutherland Sharks",
+              "description": "Cronulla Sutherland Sharks -3.5",
+              "odds": 1.87,
+              "model_prob": 0.75,
+              "implied_prob": 0.5348,
+              "edge": 0.2152,
+              "label": "STRONG VALUE",
+              "value_score": 0.1614,
+              "exp_return": 14.03
+            },
+            {
+              "bet_type": "Line",
+              "team": "Manly Warringah Sea Eagles",
+              "description": "Manly Warringah Sea Eagles +3.5",
+              "odds": 1.92,
+              "model_prob": 0.6362,
+              "implied_prob": 0.5208,
+              "edge": 0.1154,
+              "label": "STRONG VALUE",
+              "value_score": 0.0734,
+              "exp_return": 12.22
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 11.82,
           "result": null,
           "won": null,
           "payout": null
@@ -8332,45 +8960,45 @@
     }
   ],
   "lifetime": {
-    "total_rounds": 15,
-    "total_bets": 104,
-    "total_wins": 42,
-    "total_staked": 1180.0200000000002,
-    "total_returned": 1038.2999999999997,
-    "net_profit": -141.72,
-    "roi_pct": -12.01,
-    "win_rate": 40.4,
+    "total_rounds": 16,
+    "total_bets": 111,
+    "total_wins": 43,
+    "total_staked": 1262.7599999999998,
+    "total_returned": 1090.5399999999997,
+    "net_profit": -172.22,
+    "roi_pct": -13.64,
+    "win_rate": 38.7,
     "by_label": {
       "STRONG VALUE": {
-        "bets": 44,
-        "wins": 15,
-        "staked": 497.92,
-        "returned": 387.35
+        "bets": 47,
+        "wins": 16,
+        "staked": 533.38,
+        "returned": 439.59
       },
       "VALUE": {
-        "bets": 33,
+        "bets": 36,
         "wins": 12,
-        "staked": 380.8,
+        "staked": 416.26,
         "returned": 255.75
       },
       "MARGINAL": {
-        "bets": 27,
+        "bets": 28,
         "wins": 15,
-        "staked": 301.3,
+        "staked": 313.12,
         "returned": 395.2
       }
     },
     "by_bet_type": {
       "H2H": {
-        "bets": 82,
-        "wins": 31,
-        "staked": 937.25,
-        "returned": 829.56
+        "bets": 87,
+        "wins": 32,
+        "staked": 996.35,
+        "returned": 881.8
       },
       "Line": {
-        "bets": 22,
+        "bets": 24,
         "wins": 11,
-        "staked": 242.77,
+        "staked": 266.41,
         "returned": 208.74
       },
       "ATS": {
@@ -8404,27 +9032,27 @@
       },
       {
         "bucket": "30-40%",
-        "bets": 10,
-        "wins": 3
+        "bets": 12,
+        "wins": 4
       },
       {
         "bucket": "40-50%",
-        "bets": 18,
+        "bets": 20,
         "wins": 7
       },
       {
         "bucket": "50-60%",
-        "bets": 24,
+        "bets": 25,
         "wins": 6
       },
       {
         "bucket": "60-70%",
-        "bets": 13,
+        "bets": 14,
         "wins": 6
       },
       {
         "bucket": "70-80%",
-        "bets": 11,
+        "bets": 12,
         "wins": 5
       },
       {

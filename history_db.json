@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 1,
     "created_at": "2026-03-23T22:00:00Z",
-    "last_updated": "2026-09-15T00:08:25Z"
+    "last_updated": "2026-09-22T00:29:28Z"
   },
   "rounds": [
     {
@@ -13120,9 +13120,9 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 87.12,
-          "result": null,
-          "won": null,
-          "payout": null
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
         },
         {
           "game_id": "New Zealand Warriors-Newcastle Knights",
@@ -13196,6 +13196,178 @@
           "ats_picks": [],
           "fts_picks": [],
           "stake": 87.12,
+          "result": "LOSS",
+          "won": false,
+          "payout": 0.0
+        }
+      ],
+      "round_result": {
+        "resolved_at": "2026-09-22T00:29:28Z",
+        "wins": 0,
+        "losses": 2,
+        "total_staked": 174.24,
+        "total_returned": 0,
+        "net_profit": -174.24,
+        "bankroll_end": 0.01
+      }
+    },
+    {
+      "round_id": "2026-R30",
+      "season": 2026,
+      "round_number": 30,
+      "generated_at": "2026-09-22T00:29:28Z",
+      "bankroll_start": 131.46,
+      "stake_per_game": 65.73,
+      "strategy": "flat_compounding",
+      "games": [
+        {
+          "game_id": "Dolphins-Sydney Roosters",
+          "home_team": "Dolphins",
+          "away_team": "Sydney Roosters",
+          "kickoff": "2026-09-25T09:50:00Z",
+          "recommended_bet": {
+            "bet_type": "Line",
+            "team": "Dolphins",
+            "description": "Dolphins -3.5",
+            "odds": 1.93,
+            "model_prob": 0.75,
+            "implied_prob": 0.5181,
+            "edge": 0.2319,
+            "label": "STRONG VALUE",
+            "value_score": 0.1739,
+            "point": -3.5
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Dolphins",
+              "description": "Dolphins to win",
+              "odds": 1.7,
+              "model_prob": 0.5446,
+              "implied_prob": 0.5882,
+              "edge": -0.0436,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 9.26
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Sydney Roosters",
+              "description": "Sydney Roosters to win",
+              "odds": 2.18,
+              "model_prob": 0.4554,
+              "implied_prob": 0.4587,
+              "edge": -0.0033,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 9.93
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Dolphins",
+              "description": "Dolphins -3.5",
+              "odds": 1.93,
+              "model_prob": 0.75,
+              "implied_prob": 0.5181,
+              "edge": 0.2319,
+              "label": "STRONG VALUE",
+              "value_score": 0.1739,
+              "exp_return": 14.47
+            },
+            {
+              "bet_type": "Line",
+              "team": "Sydney Roosters",
+              "description": "Sydney Roosters +3.5",
+              "odds": 1.88,
+              "model_prob": 0.632,
+              "implied_prob": 0.5319,
+              "edge": 0.1001,
+              "label": "STRONG VALUE",
+              "value_score": 0.0633,
+              "exp_return": 11.88
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 65.73,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "Penrith Panthers-Newcastle Knights",
+          "home_team": "Penrith Panthers",
+          "away_team": "Newcastle Knights",
+          "kickoff": "2026-09-27T06:05:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Newcastle Knights",
+            "description": "Newcastle Knights to win",
+            "odds": 3.9,
+            "model_prob": 0.4353,
+            "implied_prob": 0.2564,
+            "edge": 0.1789,
+            "label": "STRONG VALUE",
+            "value_score": 0.0779,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Newcastle Knights",
+              "description": "Newcastle Knights to win",
+              "odds": 3.9,
+              "model_prob": 0.4353,
+              "implied_prob": 0.2564,
+              "edge": 0.1789,
+              "label": "STRONG VALUE",
+              "value_score": 0.0779,
+              "exp_return": 16.98
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Penrith Panthers",
+              "description": "Penrith Panthers to win",
+              "odds": 1.27,
+              "model_prob": 0.5647,
+              "implied_prob": 0.7874,
+              "edge": -0.2227,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 7.17
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Newcastle Knights",
+              "description": "Newcastle Knights +10.5",
+              "odds": 1.89,
+              "model_prob": 0.3181,
+              "implied_prob": 0.5291,
+              "edge": -0.211,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 6.01
+            },
+            {
+              "bet_type": "Line",
+              "team": "Penrith Panthers",
+              "description": "Penrith Panthers -10.5",
+              "odds": 1.91,
+              "model_prob": 0.696,
+              "implied_prob": 0.5236,
+              "edge": 0.1724,
+              "label": "STRONG VALUE",
+              "value_score": 0.12,
+              "exp_return": 13.29
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 65.73,
           "result": null,
           "won": null,
           "payout": null
@@ -13213,25 +13385,25 @@
     }
   ],
   "lifetime": {
-    "total_rounds": 24,
-    "total_bets": 169,
+    "total_rounds": 25,
+    "total_bets": 171,
     "total_wins": 74,
-    "total_staked": 1883.7399999999996,
+    "total_staked": 2057.9799999999996,
     "total_returned": 1838.1699999999998,
-    "net_profit": -45.57,
-    "roi_pct": -2.42,
-    "win_rate": 43.8,
+    "net_profit": -219.81,
+    "roi_pct": -10.68,
+    "win_rate": 43.3,
     "by_label": {
       "STRONG VALUE": {
-        "bets": 81,
+        "bets": 82,
         "wins": 33,
-        "staked": 889.57,
+        "staked": 976.69,
         "returned": 865.63
       },
       "VALUE": {
-        "bets": 55,
+        "bets": 56,
         "wins": 23,
-        "staked": 609.06,
+        "staked": 696.18,
         "returned": 476.85
       },
       "MARGINAL": {
@@ -13243,9 +13415,9 @@
     },
     "by_bet_type": {
       "H2H": {
-        "bets": 134,
+        "bets": 136,
         "wins": 55,
-        "staked": 1517.49,
+        "staked": 1691.73,
         "returned": 1488.85
       },
       "Line": {
@@ -13290,7 +13462,7 @@
       },
       {
         "bucket": "40-50%",
-        "bets": 37,
+        "bets": 39,
         "wins": 18
       },
       {
@@ -13409,6 +13581,11 @@
         "round_id": "2026-R28",
         "bankroll": 131.46,
         "net_profit": 32.62
+      },
+      {
+        "round_id": "2026-R29",
+        "bankroll": 0.01,
+        "net_profit": -174.24
       }
     ]
   }

@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 1,
     "created_at": "2026-03-23T22:00:00Z",
-    "last_updated": "2026-11-10T03:56:07Z"
+    "last_updated": "2026-11-17T04:17:06Z"
   },
   "rounds": [
     {
@@ -13483,11 +13483,164 @@
       "round_id": "2026-R32",
       "season": 2026,
       "round_number": 32,
-      "generated_at": "2026-11-10T03:56:07Z",
+      "generated_at": "2026-11-17T04:17:06Z",
       "bankroll_start": 0.0,
       "stake_per_game": 0.0,
       "strategy": "flat_compounding",
-      "games": [],
+      "games": [
+        {
+          "game_id": "Parramatta Eels-Gold Coast Titans",
+          "home_team": "Parramatta Eels",
+          "away_team": "Gold Coast Titans",
+          "kickoff": "2027-02-28T02:30:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Parramatta Eels",
+            "description": "Parramatta Eels to win",
+            "odds": 1.62,
+            "model_prob": 0.7078,
+            "implied_prob": 0.6173,
+            "edge": 0.0905,
+            "label": "VALUE",
+            "value_score": 0.0641,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Gold Coast Titans",
+              "description": "Gold Coast Titans to win",
+              "odds": 2.29,
+              "model_prob": 0.2922,
+              "implied_prob": 0.4367,
+              "edge": -0.1445,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 6.69
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Parramatta Eels",
+              "description": "Parramatta Eels to win",
+              "odds": 1.62,
+              "model_prob": 0.7078,
+              "implied_prob": 0.6173,
+              "edge": 0.0905,
+              "label": "VALUE",
+              "value_score": 0.0641,
+              "exp_return": 11.47
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Gold Coast Titans",
+              "description": "Gold Coast Titans +3.5",
+              "odds": 1.94,
+              "model_prob": 0.2507,
+              "implied_prob": 0.5155,
+              "edge": -0.2648,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 4.86
+            },
+            {
+              "bet_type": "Line",
+              "team": "Parramatta Eels",
+              "description": "Parramatta Eels -3.5",
+              "odds": 1.86,
+              "model_prob": 0.2959,
+              "implied_prob": 0.5376,
+              "edge": -0.2417,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 5.5
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 0.0,
+          "result": null,
+          "won": null,
+          "payout": null
+        },
+        {
+          "game_id": "Melbourne Storm-Wests Tigers",
+          "home_team": "Melbourne Storm",
+          "away_team": "Wests Tigers",
+          "kickoff": "2027-02-28T04:30:00Z",
+          "recommended_bet": {
+            "bet_type": "H2H",
+            "team": "Wests Tigers",
+            "description": "Wests Tigers to win",
+            "odds": 3.08,
+            "model_prob": 0.4595,
+            "implied_prob": 0.3247,
+            "edge": 0.1348,
+            "label": "STRONG VALUE",
+            "value_score": 0.0619,
+            "point": null
+          },
+          "h2h_bets": [
+            {
+              "bet_type": "H2H",
+              "team": "Melbourne Storm",
+              "description": "Melbourne Storm to win",
+              "odds": 1.38,
+              "model_prob": 0.5405,
+              "implied_prob": 0.7246,
+              "edge": -0.1841,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 7.46
+            },
+            {
+              "bet_type": "H2H",
+              "team": "Wests Tigers",
+              "description": "Wests Tigers to win",
+              "odds": 3.08,
+              "model_prob": 0.4595,
+              "implied_prob": 0.3247,
+              "edge": 0.1348,
+              "label": "STRONG VALUE",
+              "value_score": 0.0619,
+              "exp_return": 14.15
+            }
+          ],
+          "spread_bets": [
+            {
+              "bet_type": "Line",
+              "team": "Melbourne Storm",
+              "description": "Melbourne Storm -8.5",
+              "odds": 1.9,
+              "model_prob": 0.6256,
+              "implied_prob": 0.5263,
+              "edge": 0.0993,
+              "label": "VALUE",
+              "value_score": 0.0621,
+              "exp_return": 11.89
+            },
+            {
+              "bet_type": "Line",
+              "team": "Wests Tigers",
+              "description": "Wests Tigers +8.5",
+              "odds": 1.9,
+              "model_prob": 0.5044,
+              "implied_prob": 0.5263,
+              "edge": -0.0219,
+              "label": null,
+              "value_score": 0,
+              "exp_return": 9.58
+            }
+          ],
+          "ats_picks": [],
+          "fts_picks": [],
+          "stake": 0.0,
+          "result": null,
+          "won": null,
+          "payout": null
+        }
+      ],
       "round_result": {
         "resolved_at": null,
         "wins": null,
